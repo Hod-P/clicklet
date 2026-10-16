@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clicklet: Tiny, portable mouse mapper for Windows</title>
+<meta name="description" content="Clicklet is a tiny Windows tray app that maps mouse buttons 4 and 5 to keyboard shortcuts. One native app, 376&nbsp;KB, portable, free and open source.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://tabakman.github.io/clicklet/">
+<link rel="icon" type="image/svg+xml" href="assets/appicon.svg">
+<link rel="icon" type="image/png" sizes="512x512" href="assets/appicon_512.png">
+<link rel="apple-touch-icon" href="assets/appicon_512.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tabakman.github.io/clicklet/">
+<meta property="og:title" content="Clicklet: Tiny, portable mouse mapper for Windows">
+<meta property="og:description" content="A tiny Windows tray app that maps mouse buttons 4 and 5 to keyboard shortcuts. One native app, 376&nbsp;KB, portable, free and open source.">
+<meta property="og:image" content="https://tabakman.github.io/clicklet/assets/appicon_512.png">
+<meta name="twitter:card" content="summary">
+<link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{
+  font-family:"Inter";
+  font-style:normal;
+  font-weight:100 900;
+  font-display:swap;
+  src:url("assets/fonts/inter-latin-var.woff2") format("woff2");
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root{
+  --sys:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+  --body:"Inter",var(--sys);
+  --bg:#F6F7F9;
+  --surface:#FFFFFF;
+  --surface-2:#FFFFFF;
+  --text:#02152E;
+  --muted:#53657C;
+  --border:#E1E6EC;
+  --border-strong:#CFD7E1;
+  --accent:#008CFC;
+  --link:#0057D9;
+  --btn-bg:#006EFB;
+  --btn-bg-hover:#0057D9;
+  --btn-fg:#FFFFFF;
+  --code-bg:#FFFFFF;
+  --chip-bg:#EDF1F6;
+  --focus:#006EFB;
+  --shadow:0 1px 2px rgba(2,21,46,.05), 0 8px 24px -12px rgba(2,21,46,.16);
+  --shadow-lift:0 2px 4px rgba(2,21,46,.06), 0 24px 48px -20px rgba(2,21,46,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#081120;
+    --surface:#0E1A2C;
+    --surface-2:#122238;
+    --text:#E9EFF7;
+    --muted:#97A9C0;
+    --border:#1D2E47;
+    --border-strong:#2A4061;
+    --accent:#68D0FC;
+    --link:#68D0FC;
+    --btn-bg:#68D0FC;
+    --btn-bg-hover:#A6E3FD;
+    --btn-fg:#02152E;
+    --code-bg:#0A1525;
+    --chip-bg:#15253C;
+    --focus:#68D0FC;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    --shadow-lift:0 2px 4px rgba(0,0,0,.5), 0 24px 48px -20px rgba(0,0,0,.8);
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-wrap:break-word;
+}
+img,svg{max-width:100%}
+h1,h2,h3{margin:0;font-weight:600;line-height:1.15;letter-spacing:-.02em}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline;text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+code,kbd,pre{font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"SF Mono",Menlo,monospace}
+code{font-size:.875em}
+
+.wrap{width:100%;max-width:1440px;margin:0 auto;padding:0 24px}
+@media (max-width:420px){.wrap{padding:0 18px}}
+
+.skip{position:absolute;left:-9999px;top:0}
+.skip:focus{left:12px;top:12px;z-index:20;background:var(--surface);color:var(--text);
+  padding:10px 14px;border:1px solid var(--border-strong);border-radius:8px}
+
+.site-head{border-bottom:1px solid var(--border)}
+.site-head .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:10px 16px;min-height:84px;padding-top:14px;padding-bottom:14px}
+.brand{display:flex;align-items:center}
+.brand img{display:block;height:40px;width:auto}
+.repo-url{
+  max-width:100%;
+  font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"SF Mono",Menlo,monospace;
+  font-size:.875rem;line-height:1.4;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.repo-url .host{color:var(--muted)}
+.repo-url:hover{text-decoration:underline;text-underline-offset:3px}
+.repo-url:hover .host{color:var(--text)}
+@media (max-width:400px){.repo-url{font-size:.8125rem}}
+.repo-url .gh{width:1.4em;height:1.4em;vertical-align:-.3em}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font:inherit;font-size:1rem;font-weight:600;letter-spacing:-.005em;
+  padding:13px 22px;border-radius:10px;border:1px solid transparent;
+  text-decoration:none;white-space:nowrap;transition:background-color .15s,border-color .15s,transform .15s;
+}
+.btn:hover{text-decoration:none}
+.btn-primary{background:var(--btn-bg);color:var(--btn-fg);box-shadow:var(--shadow)}
+.btn-primary:hover{background:var(--btn-bg-hover)}
+.btn-primary:active{transform:translateY(1px)}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn-secondary:hover{border-color:var(--text)}
+.btn svg{flex:none}
+
+.gh{display:inline-block;flex:none;width:1.1em;height:1.1em;fill:currentColor;vertical-align:-.17em;margin-right:.5em}
+.btn .gh{margin-right:0}
+
+.hero{padding:clamp(56px,8vw,104px) 0 clamp(48px,7vw,88px)}
+.hero .wrap{display:grid;gap:clamp(44px,6vw,72px);grid-template-columns:1fr;align-items:center}
+@media (min-width:920px){
+  .hero .wrap{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+}
+.eyebrow{
+  font-size:.9375rem;font-weight:600;letter-spacing:-.005em;
+  color:var(--accent);margin-bottom:18px;text-wrap:balance;
+}
+@media (prefers-color-scheme: light){.eyebrow{color:var(--link)}}
+h1{font-size:clamp(2.375rem,6.4vw,4rem);letter-spacing:-.038em;line-height:1.02;text-wrap:balance}
+.lede{margin-top:22px;font-size:clamp(1.0625rem,1.6vw,1.25rem);color:var(--muted);max-width:30em}
+
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.cta-specs{
+  margin-top:18px;font-size:.875rem;color:var(--muted);
+  font-variant-numeric:tabular-nums;text-wrap:balance;
+}
+.cta-specs .sep{opacity:.55}
+.cta-specs a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.cta-specs a:hover{color:var(--text)}
+.cta-meta{margin-top:16px;font-size:.875rem;color:var(--muted)}
+
+.mock{margin:0}
+.mock-stage{
+  position:relative;border-radius:16px;border:1px solid var(--border);
+  background:
+    radial-gradient(120% 90% at 85% 8%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+    var(--surface);
+  padding:22px 18px 18px;box-shadow:var(--shadow);
+}
+@supports not (background: color-mix(in srgb, red 10%, blue)){
+  .mock-stage{background:var(--surface)}
+}
+.menu{
+  margin:0 0 0 auto;max-width:288px;
+  border:1px solid var(--border-strong);border-radius:12px;
+  background:var(--surface-2);box-shadow:var(--shadow-lift);
+  padding:6px;font-size:.875rem;
+}
+.menu li{position:relative;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 32px;border-radius:7px;white-space:nowrap}
+.menu .dim{color:var(--muted)}
+.menu .arrow{opacity:.6}
+.menu .sep{display:block;height:1px;padding:0;margin:5px 10px;background:var(--border)}
+.menu .check{
+  position:absolute;left:12px;top:0;bottom:0;width:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);font-weight:700;
+}
+.menu .on{background:var(--chip-bg)}
+.tray-strip{
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px;
+  padding:7px 11px;border-radius:10px;background:var(--chip-bg);
+  font-size:.75rem;color:var(--muted);
+}
+.tray-strip img{height:17px;width:17px;display:block}
+.tray-strip .clock{text-align:right;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+@media (max-width:380px){
+  .menu{font-size:.8125rem;max-width:none}
+  .menu li{padding:7px 10px 7px 30px}
+  .menu .check{left:10px}
+}
+
+section{border-top:1px solid var(--border)}
+.sec{padding-block:clamp(52px,7.5vw,92px)}
+.sec-head{max-width:34em;margin-bottom:clamp(28px,4vw,44px)}
+.sec-head h2{font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.028em;text-wrap:balance}
+.sec-head p{margin-top:12px;color:var(--muted)}
+.kicker{
+  font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:14px;
+}
+@media (prefers-color-scheme: light){.kicker{color:var(--link)}}
+
+.config-grid{display:grid;gap:clamp(24px,3.5vw,40px);grid-template-columns:1fr}
+@media (min-width:700px){.config-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);
+}
+.code-card{overflow:hidden}
+.code-card .filename{
+  display:flex;align-items:center;gap:9px;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  font-size:.8125rem;font-weight:600;color:var(--muted);
+  font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"SF Mono",Menlo,monospace;
+}
+.code-card .filename .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.code-card pre{
+  margin:0;padding:18px 16px;background:var(--code-bg);
+  font-size:.875rem;line-height:1.75;overflow-x:auto;
+}
+.code-card .s{color:var(--muted)}
+.code-card .k{color:var(--link)}
+.notes li{position:relative;padding:0 0 0 20px;margin-bottom:14px;color:var(--muted)}
+.notes li:last-child{margin-bottom:0}
+.notes li::before{
+  content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;border-radius:50%;
+  background:var(--accent);
+}
+.notes strong{display:block;color:var(--text);font-weight:600}
+
+.grid-3{display:grid;gap:clamp(20px,2.5vw,28px);grid-template-columns:1fr}
+@media (min-width:880px){.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.feature{padding:26px 24px 28px}
+.feature h3{font-size:1.0625rem;margin-bottom:14px}
+.feature .mark{
+  width:34px;height:34px;border-radius:9px;background:var(--chip-bg);
+  display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--accent);
+}
+@media (prefers-color-scheme: light){.feature .mark{color:var(--link)}}
+.feature ul li{color:var(--muted);padding:4px 0 4px 18px;position:relative;font-size:.9375rem}
+.feature ul li::before{
+  content:"";position:absolute;left:0;top:.95em;width:6px;height:1.5px;background:var(--border-strong);
+}
+
+.sc-card{padding:clamp(22px,3vw,32px) clamp(18px,3vw,32px)}
+.sc-h{font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.sc-grammar{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px clamp(14px,2.4vw,22px)}
+.sc-part{display:grid;gap:9px;min-width:0}
+.sc-caps{display:flex;flex-wrap:wrap;gap:7px}
+.sc-caps kbd,.sc-caps .one{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:8px 13px 9px;border-radius:9px;background:var(--chip-bg);
+  border:1px dashed var(--border-strong);
+  font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"SF Mono",Menlo,monospace;
+  font-size:.875rem;font-weight:600;color:var(--text);white-space:nowrap;
+}
+.sc-caps .one{
+  border-style:solid;background:var(--surface-2);box-shadow:0 2px 0 var(--border-strong);
+}
+.sc-plus{padding-top:6px;color:var(--muted);font-size:1.25rem;line-height:1.4}
+.sc-lbl{font-size:.8125rem;color:var(--muted)}
+@media (max-width:600px){
+  .sc-grammar{flex-direction:column;align-items:flex-start;gap:10px}
+  .sc-plus{padding:0 0 0 4px;line-height:1.2}
+}
+.sc-block{
+  margin-top:clamp(22px,3vw,28px);padding-top:clamp(20px,2.6vw,26px);
+  border-top:1px solid var(--border);
+}
+.sc-fams{margin:0;font-size:.9375rem}
+.sc-fams div{
+  display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:3px clamp(14px,2.5vw,24px);
+  padding:10px 0;border-top:1px solid var(--border);
+}
+.sc-fams div:first-child{border-top:0;padding-top:0}
+.sc-fams dt{color:var(--muted)}
+.sc-fams dd{margin:0}
+@media (max-width:520px){
+  .sc-fams div{grid-template-columns:1fr}
+  .sc-fams dt{font-size:.8125rem}
+}
+.sc-ex{display:grid;gap:11px clamp(18px,3vw,32px);grid-template-columns:1fr}
+@media (min-width:600px){.sc-ex{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1360px){.sc-ex{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.sc-ex li{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sc-ex code{
+  padding:4px 9px;border-radius:7px;background:var(--chip-bg);border:1px solid var(--border-strong);
+  font-size:.8125rem;color:var(--text);
+}
+.sc-ex span{color:var(--muted);font-size:.875rem}
+
+.uses{
+  display:grid;column-gap:clamp(32px,4vw,56px);
+  grid-auto-flow:column;grid-template-columns:1fr;grid-template-rows:repeat(10,auto);
+}
+@media (min-width:731px){
+  .uses{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,auto)}
+}
+@media (min-width:1400px){
+  .uses{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,auto)}
+  .uses li:nth-child(n+5):nth-child(-n+7){grid-column:2}
+  .uses li:nth-child(n+8){grid-column:3}
+}
+.uses li{
+  display:flex;align-items:center;gap:13px;
+  padding:14px 0;border-bottom:1px solid var(--border);font-size:.9375rem;
+}
+.uses .ico{
+  flex:none;width:30px;height:30px;border-radius:8px;background:var(--chip-bg);
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+}
+@media (prefers-color-scheme: light){.uses .ico{color:var(--link)}}
+.uses .what{flex:1 1 0;min-width:0}
+.uses .what strong{font-weight:600;color:var(--text)}
+.uses .what span{color:var(--muted)}
+.uses .sc{
+  margin-left:auto;padding-left:12px;font-size:.8125rem;white-space:nowrap;
+  font-family:ui-monospace,"Cascadia Mono","Segoe UI Mono",Consolas,"SF Mono",Menlo,monospace;
+  color:var(--muted);
+}
+.uses .sc.free{font-family:inherit;font-size:.875rem;font-style:italic}
+@media (max-width:730px){
+  .uses .what{flex:0 1 auto}
+  .uses .sc{margin-left:0}
+}
+@media (max-width:460px){
+  .uses li{flex-wrap:wrap}
+  .uses .what{flex:1 1 0}
+  .uses .sc{margin-left:43px;padding-left:0;width:100%}
+}
+
+.specs{display:grid;column-gap:clamp(20px,3vw,40px);grid-template-columns:1fr;font-size:.9375rem}
+@media (min-width:460px){.specs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:760px){.specs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1100px){.specs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.specs > div{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px clamp(16px,2vw,28px);
+  padding:11px 0;border-bottom:1px solid var(--border);
+}
+.specs dt{color:var(--muted);white-space:nowrap}
+.specs dd{margin:0;text-align:right}
+.faq{border-top:1px solid var(--border)}
+.faq details{border-bottom:1px solid var(--border)}
+.faq summary{
+  display:flex;align-items:flex-start;gap:13px;
+  padding:16px 0;cursor:pointer;font-weight:600;list-style:none;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::marker{content:""}
+.faq summary:hover{color:var(--link)}
+.faq summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:5px}
+.faq summary::before{
+  content:"";flex:none;width:9px;height:9px;margin:.36em 1px 0 2px;
+  border-right:1.7px solid var(--muted);border-bottom:1.7px solid var(--muted);
+  transform:rotate(-45deg);transition:transform .15s;
+}
+.faq details[open] summary::before{transform:rotate(45deg)}
+.faq p{margin:-4px 0 0;padding:0 0 18px 25px;color:var(--muted);font-size:.9375rem;text-wrap:pretty}
+
+.close-band{padding-block:clamp(56px,7vw,96px);text-align:center}
+.close-band h2{font-size:clamp(1.625rem,3.4vw,2.25rem);letter-spacing:-.03em;margin:0 auto;text-wrap:balance}
+.close-band .cta{justify-content:center;margin-top:30px}
+.close-band .cta-meta{text-align:center}
+
+.site-foot{border-top:1px solid var(--border);padding:40px 0;font-size:.875rem;color:var(--muted)}
+.foot-top{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.foot-top img{height:24px;width:auto;display:block}
+.foot-links{display:flex;flex-wrap:wrap;gap:20px}
+.foot-links a{color:var(--muted)}
+.foot-links a:hover{color:var(--text)}
+
+img.logo-dark{display:none}
+@media (prefers-color-scheme: dark){
+  img.logo-light{display:none}
+  img.logo-dark{display:block}
+}
+</style>
+</head>
+<body itemscope itemtype="https://schema.org/SoftwareApplication">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="gh-mark" viewBox="0 0 16 16"><path fill="currentColor" d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></symbol></svg>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="#main" aria-label="Clicklet home">
+      <img class="logo-light" src="assets/logo.svg" alt="Clicklet" width="172" height="40">
+      <img class="logo-dark" src="assets/logo-dark.svg" alt="Clicklet" width="172" height="40">
+    </a>
+    <a class="repo-url" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer" itemprop="sameAs"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg><span class="host">github.com/</span>tabakman/clicklet</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Tiny, portable Windows tray app</p>
+        <h1>Put your keyboard shortcuts on your mouse.</h1>
+        <p class="lede">Clicklet maps mouse buttons 4 and 5 to any shortcut you like: Ctrl+Enter, Ctrl+C, Win+Shift+S. One&nbsp;native app, an optional config file, no ads, no tracking. Free and open source.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/tabakman/clicklet/releases/download/v1.0.0/Clicklet-1.0.0-win-x64.zip" target="_blank" rel="noopener noreferrer" itemprop="downloadUrl">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6v8.2M4.6 6.6 8 10l3.4-3.4M2 11.6v1.3a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1.3"/></svg>
+            Download for Windows
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>View on GitHub</a>
+        </div>
+        <p class="cta-specs">Windows&nbsp;x64 <span class="sep" aria-hidden="true">&middot;&nbsp;</span>376&nbsp;KB <span class="sep" aria-hidden="true">&middot;&nbsp;</span>Portable <span class="sep" aria-hidden="true">&middot;&nbsp;</span>MIT <span class="sep" aria-hidden="true">&middot;&nbsp;</span><a href="https://github.com/tabakman/clicklet/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="All releases on GitHub"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>All&nbsp;releases</a></p>
+      </div>
+
+      <figure class="mock">
+        <div class="mock-stage">
+          <ul class="menu">
+            <li class="dim"><span>Mouse 4</span><span class="arrow" aria-hidden="true">&rarr;</span><span>Ctrl+C</span></li>
+            <li class="dim"><span>Mouse 5</span><span class="arrow" aria-hidden="true">&rarr;</span><span>Ctrl+V</span></li>
+            <li class="sep" role="separator"></li>
+            <li class="on"><span class="check" aria-hidden="true">&#10003;</span>Enabled</li>
+            <li class="sep" role="separator"></li>
+            <li>About</li>
+            <li>Exit</li>
+          </ul>
+          <div class="tray-strip" aria-hidden="true">
+            <img src="assets/appicon.svg" alt="" width="17" height="17">
+            <span class="clock" id="tb-clock">09:41</span>
+          </div>
+<script>
+(function () {
+  var el = document.getElementById("tb-clock");
+  if (!el || !Date.prototype.toLocaleTimeString) return;
+  var opts = { hour: "numeric", minute: "2-digit" };
+  function fmt(d) { return d.toLocaleTimeString([], opts); }
+  try {
+    var max = 0, d = new Date(2000, 0, 1, 0, 0);
+    el.style.minWidth = "0";
+    for (var h = 0; h < 24; h++) {
+      d.setHours(h);
+      el.textContent = fmt(d);
+      max = Math.max(max, el.getBoundingClientRect().width);
+    }
+    var fs = parseFloat(getComputedStyle(el).fontSize);
+    if (max && fs) el.style.minWidth = (Math.ceil(max * 100 / fs) / 100) + "em";
+    else el.style.minWidth = "";
+  } catch (e) {
+    el.style.minWidth = "";
+  }
+  function tick() {
+    var now = new Date();
+    try {
+      el.textContent = fmt(now);
+    } catch (e) {
+      return;
+    }
+    setTimeout(tick, (60 - now.getSeconds()) * 1000 + 250);
+  }
+  tick();
+})();
+</script>
+        </div>
+      </figure>
+    </div>
+  </div>
+
+  <section id="config" aria-labelledby="config-h">
+    <div class="wrap sec">
+      <div class="sec-head">
+        <h2 id="config-h">Run it. Nothing to set up.</h2>
+        <p>With no config file, button 5 sends Ctrl+Enter. Want something else? Put <code>Clicklet.ini</code> next to the executable.</p>
+      </div>
+      <div class="config-grid">
+        <div class="card code-card">
+          <div class="filename"><span class="dot" aria-hidden="true"></span>Clicklet.ini</div>
+<pre><code><span class="s">[Mapping]</span>
+<span class="k">Button4</span>=ctrl+c
+<span class="k">Button5</span>=ctrl+v</code></pre>
+        </div>
+        <ul class="notes">
+          <li><strong>That&rsquo;s the whole config.</strong> Up to two mappings, one shortcut per button.</li>
+          <li><strong>Leave a button out.</strong> It keeps its normal behavior.</li>
+          <li><strong>Edits apply on restart.</strong> Invalid settings are reported at startup.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="design-h">
+    <div class="wrap sec">
+      <div class="sec-head">
+        <h2 id="design-h">Narrow on purpose.</h2>
+      </div>
+      <div class="grid-3">
+        <div class="card feature">
+          <div class="mark" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.3" y="1.6" width="9.4" height="14.8" rx="4.7"/><path d="M4.4 7.1h9.2M9 1.7v5.4"/></svg>
+          </div>
+          <h3>One job</h3>
+          <ul>
+            <li>Mouse buttons 4 and 5</li>
+            <li>Each gets one keyboard shortcut</li>
+            <li>The original click is swallowed when mapped</li>
+            <li>Never remaps left, right or middle click</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <div class="mark" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.8 15.5 5.4v7.2L9 16.2 2.5 12.6V5.4Z"/><path d="M2.6 5.4 9 9l6.4-3.6M9 9v7.2"/></svg>
+          </div>
+          <h3>Small by design</h3>
+          <ul>
+            <li>One native app, 376&nbsp;KB</li>
+            <li>Unzip and run, nothing to install</li>
+            <li>Zero CPU when idle</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <div class="mark" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.6 3 4.1v4.6c0 3.5 2.5 6.4 6 7.7 3.5-1.3 6-4.2 6-7.7V4.1Z"/><path d="m6.6 8.9 1.8 1.8 3.2-3.4"/></svg>
+          </div>
+          <h3>Private by design</h3>
+          <ul>
+            <li>No network connections</li>
+            <li>No telemetry, no logging</li>
+            <li>No file or registry writes</li>
+            <li>Source is one C++ file, open to inspect</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="shortcuts" aria-labelledby="shortcuts-h">
+    <div class="wrap sec">
+      <div class="sec-head">
+        <p class="kicker">Supported shortcuts</p>
+        <h2 id="shortcuts-h">One key, with or without modifiers.</h2>
+        <p>Anything that fits this shape can go on a button.</p>
+      </div>
+      <div class="card sc-card">
+        <div class="sc-grammar">
+          <div class="sc-part">
+            <div class="sc-caps"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Shift</kbd><kbd>Win</kbd></div>
+            <p class="sc-lbl">Any mix of these, or none at all</p>
+          </div>
+          <span class="sc-plus" aria-hidden="true">+</span>
+          <div class="sc-part">
+            <div class="sc-caps"><span class="one">one key</span></div>
+            <p class="sc-lbl">Exactly one, from the list below</p>
+          </div>
+        </div>
+        <div class="sc-block">
+          <h3 class="sc-h">Keys you can send</h3>
+          <dl class="sc-fams">
+            <div><dt>Letters</dt><dd>A&ndash;Z</dd></div>
+            <div><dt>Digits</dt><dd>0&ndash;9</dd></div>
+            <div><dt>Function</dt><dd>F1&ndash;F24</dd></div>
+            <div><dt>Editing</dt><dd>Enter, Tab, Esc, Space, Backspace, Delete, Insert</dd></div>
+            <div><dt>Navigation</dt><dd>Home, End, Page Up, Page Down, and the four arrow keys</dd></div>
+          </dl>
+        </div>
+        <div class="sc-block">
+          <h3 class="sc-h">Written in Clicklet.ini</h3>
+          <ul class="sc-ex">
+            <li><code>ctrl+enter</code><span>one modifier</span></li>
+            <li><code>ctrl+shift+v</code><span>two modifiers</span></li>
+            <li><code>win+shift+s</code><span>Win counts as a modifier</span></li>
+            <li><code>f5</code><span>no modifier at all</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="uses" aria-labelledby="uses-h">
+    <div class="wrap sec">
+      <div class="sec-head">
+        <h2 id="uses-h">People who press the same shortcuts all day.</h2>
+        <p>Put them on buttons 4 and 5.</p>
+      </div>
+      <ul class="uses">
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.9 15 4.2v4.5c0 3.4-2.5 6-6 7.4-3.5-1.4-6-4-6-7.4V4.2Z"/><path d="m6.2 8.9 2 2 3.6-3.9"/></svg>
+          </span>
+          <span class="what"><strong>Claude Code</strong><span>: approve a request</span></span>
+          <span class="sc">Ctrl+Enter</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.8 7.6A5.9 5.9 0 0 0 3.9 5.9"/><path d="M3.9 2.8v3.1H7"/><path d="M3.2 10.4a5.9 5.9 0 0 0 10.9 1.7"/><path d="M14.1 15.2v-3.1H11"/></svg>
+          </span>
+          <span class="what"><strong>Claude Code</strong><span>: cycle permission mode</span></span>
+          <span class="sc">Shift+Tab</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2.2C9.6 6.2 11.8 8.4 15.8 9 11.8 9.6 9.6 11.8 9 15.8 8.4 11.8 6.2 9.6 2.2 9 6.2 8.4 8.4 6.2 9 2.2Z"/></svg>
+          </span>
+          <span class="what"><strong>AI tools</strong></span>
+          <span class="sc free">your pick</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1.9" y="4" width="14.2" height="10" rx="2"/><path d="m2.6 5.3 6.4 4.3 6.4-4.3"/></svg>
+          </span>
+          <span class="what"><strong>Gmail and Outlook</strong><span>: send</span></span>
+          <span class="sc">Ctrl+Enter</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.4" width="14" height="11.2" rx="2"/><path d="M7.6 6.7v4.6l3.9-2.3Z"/></svg>
+          </span>
+          <span class="what"><strong>JupyterLab</strong><span>: run the selected cell</span></span>
+          <span class="sc">Ctrl+Enter</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.4 9.6 3.8 3.8 7.4-8.2"/></svg>
+          </span>
+          <span class="what"><strong>Copilot in VS Code</strong><span>: accept the suggestion</span></span>
+          <span class="sc">Tab</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.3" width="14" height="11.4" rx="2"/><path d="M2 7.1h14M6.5 3.3v3.8"/><path d="m7.6 9.9 2.8 2.8M10.4 9.9l-2.8 2.8"/></svg>
+          </span>
+          <span class="what"><strong>Close a tab</strong></span>
+          <span class="sc">Ctrl+W</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.3" width="14" height="11.4" rx="2"/><path d="M2 7.1h14M6.5 3.3v3.8"/><path d="M7.2 9.9h4a1.7 1.7 0 0 1 0 3.4H8.6"/><path d="M8.7 8.4 7.2 9.9l1.5 1.5"/></svg>
+          </span>
+          <span class="what"><strong>Reopen the closed tab</strong></span>
+          <span class="sc">Ctrl+Shift+T</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.4" y="1.9" width="5.2" height="8.4" rx="2.6"/><path d="M3.9 8.7a5.1 5.1 0 0 0 10.2 0M9 13.8v2.2"/></svg>
+          </span>
+          <span class="what"><strong>Teams</strong><span>: mute or unmute</span></span>
+          <span class="sc">Ctrl+Shift+M</span>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.3 5.9h2.8l1.2-2h5.4l1.2 2h2.8a1.2 1.2 0 0 1 1.2 1.2v6.1a1.2 1.2 0 0 1-1.2 1.2H2.3a1.2 1.2 0 0 1-1.2-1.2V7.1a1.2 1.2 0 0 1 1.2-1.2Z"/><circle cx="9" cy="10.2" r="2.7"/></svg>
+          </span>
+          <span class="what"><strong>Screenshot a region</strong></span>
+          <span class="sc">Win+Shift+S</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="specs" aria-labelledby="specs-h">
+    <div class="wrap sec">
+      <div class="sec-head">
+        <p class="kicker">Specs</p>
+        <h2 id="specs-h"><span itemprop="name">Clicklet</span> <span itemprop="softwareVersion">1.0.0</span>.</h2>
+      </div>
+      <meta itemprop="applicationCategory" content="UtilitiesApplication">
+      <dl class="specs">
+        <div><dt>Platform</dt><dd itemprop="operatingSystem">Windows, x64</dd></div>
+        <div><dt>Tested on</dt><dd>Windows&nbsp;11</dd></div>
+        <div><dt>Size</dt><dd>376&nbsp;KB, one file</dd></div>
+        <div><dt>Language</dt><dd>C++ / Win32</dd></div>
+        <div><dt>Dependencies</dt><dd>None to install</dd></div>
+        <div><dt>Install</dt><dd>Portable</dd></div>
+        <div><dt>Admin</dt><dd>Not required</dd></div>
+        <div><dt>Config</dt><dd>Optional <code>Clicklet.ini</code></dd></div>
+        <div><dt>Mappings</dt><dd>Up to 2</dd></div>
+        <div><dt>Startup</dt><dd>Not automatic</dd></div>
+        <div><dt>Price</dt><dd>Free</dd></div>
+        <div><dt>Code license</dt><dd itemprop="license">MIT</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-h">
+    <div class="wrap sec">
+      <div class="sec-head">
+        <h2 id="faq-h">Frequently Asked Questions</h2>
+      </div>
+      <div class="faq" itemscope itemtype="https://schema.org/FAQPage">
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Which buttons can I map?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Mouse buttons 4 and 5, the two side buttons. One shortcut each, so two mappings at most. Left, right and middle click are never touched.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Does my Back button still work?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">A mapped button sends its shortcut instead of its normal click. Buttons 4 and 5 are Back and Forward by Windows convention, so once you map one, it stops going back or forward. A button you leave unmapped is untouched.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">What can a button send?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">One key, optionally combined with Ctrl, Alt, Shift or Win. Supported keys are letters, digits, F1&ndash;F24, Enter, Tab, Esc, Space, Backspace, Delete, Insert, Home, End, Page Up, Page Down and the arrow keys. No macros, key sequences, media or volume keys, and no per-app profiles.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Will it work with my mouse?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">If Windows reports your side buttons as buttons 4 and 5, yes. Mouse-vendor software can intercept them before Clicklet sees them.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Does it work on Windows 10?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Clicklet 1.0.0 was built and tested on Windows&nbsp;11, x64. It hasn&rsquo;t been tested on Windows&nbsp;10, so we can&rsquo;t tell you either way.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Does it work in apps running as administrator?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">No. Clicklet doesn&rsquo;t ask for admin rights, and Windows won&rsquo;t let it send input to windows that have them.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">How is this different from AutoHotkey?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Clicklet isn&rsquo;t a scripting system. There&rsquo;s no scripting language and no script to maintain. At most two lines in a text file, or no file at all.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">How is this different from PowerToys?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">PowerToys Keyboard Manager remaps keyboard keys and shortcuts. Clicklet does one thing: mouse buttons 4 and 5 to keyboard shortcuts.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Do I need my mouse maker&rsquo;s software?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">No. Clicklet works without a mouse-vendor configuration suite. It&rsquo;s one small portable app.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Where are my settings?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">In <code>Clicklet.ini</code> next to the executable, if you made one. Clicklet only reads it, and picks up edits when you restart it. If the first line isn&rsquo;t recognized, save the file without a BOM.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Can I turn it off for a moment?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Uncheck <strong>Enabled</strong> in the tray menu. The tray icon has a separate disabled version, so you can see the state at a glance. Clicklet starts enabled every time it runs.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Does it start with Windows?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Not by itself. Put a shortcut to <code>Clicklet.exe</code> in <code>shell:startup</code>.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Why does Windows warn me on first run?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">The executable isn&rsquo;t code-signed, so SmartScreen flags it as unrecognised.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">Does it send or write anything?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">No network connections, no telemetry, no logging. Clicklet never writes files or registry entries. It only reads the optional <code>Clicklet.ini</code>. The source is one C++ file if you want to check.</span></p>
+        </details>
+        <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
+          <summary itemprop="name">How do I uninstall it?</summary>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Exit it from the tray menu and delete the files. Nothing was installed and nothing was written outside the folder.</span></p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="get-h">
+    <div class="wrap close-band">
+      <h2 id="get-h">Get Clicklet.</h2>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/tabakman/clicklet/releases/download/v1.0.0/Clicklet-1.0.0-win-x64.zip" target="_blank" rel="noopener noreferrer">
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6v8.2M4.6 6.6 8 10l3.4-3.4M2 11.6v1.3a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1.3"/></svg>
+          Download Clicklet 1.0.0
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>View the source</a>
+      </div>
+      <p class="cta-meta">Windows, x64 &middot;&nbsp;Free and open source</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <img class="logo-light" src="assets/logo.svg" alt="Clicklet" width="103" height="24">
+      <img class="logo-dark" src="assets/logo-dark.svg" alt="Clicklet" width="103" height="24">
+      <nav class="foot-links" aria-label="Footer">
+        <a href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer" aria-label="Repository on GitHub">Repository</a>
+        <a href="https://github.com/tabakman/clicklet/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Releases on GitHub">Releases</a>
+        <a href="https://github.com/tabakman/clicklet#readme" target="_blank" rel="noopener noreferrer" aria-label="Documentation on GitHub">Documentation</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
