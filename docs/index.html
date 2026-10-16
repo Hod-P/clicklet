@@ -17,6 +17,14 @@
 <meta property="og:image" content="https://tabakman.github.io/clicklet/assets/appicon_512.png">
 <meta name="twitter:card" content="summary">
 <link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem("clicklet-theme"); } catch (e) {}
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  document.documentElement.classList.add("js");
+})();
+</script>
 <style>
 @font-face{
   font-family:"Inter";
@@ -47,9 +55,10 @@
   --focus:#006EFB;
   --shadow:0 1px 2px rgba(2,21,46,.05), 0 8px 24px -12px rgba(2,21,46,.16);
   --shadow-lift:0 2px 4px rgba(2,21,46,.06), 0 24px 48px -20px rgba(2,21,46,.28);
+  color-scheme:light dark;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#081120;
     --surface:#0E1A2C;
     --surface-2:#122238;
@@ -69,6 +78,27 @@
     --shadow-lift:0 2px 4px rgba(0,0,0,.5), 0 24px 48px -20px rgba(0,0,0,.8);
   }
 }
+:root[data-theme="dark"]{
+  --bg:#081120;
+  --surface:#0E1A2C;
+  --surface-2:#122238;
+  --text:#E9EFF7;
+  --muted:#97A9C0;
+  --border:#1D2E47;
+  --border-strong:#2A4061;
+  --accent:#68D0FC;
+  --link:#68D0FC;
+  --btn-bg:#68D0FC;
+  --btn-bg-hover:#A6E3FD;
+  --btn-fg:#02152E;
+  --code-bg:#0A1525;
+  --chip-bg:#15253C;
+  --focus:#68D0FC;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  --shadow-lift:0 2px 4px rgba(0,0,0,.5), 0 24px 48px -20px rgba(0,0,0,.8);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{color-scheme:light}
 
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -113,8 +143,30 @@ code{font-size:.875em}
 .repo-url .host{color:var(--muted)}
 .repo-url:hover{text-decoration:underline;text-underline-offset:3px}
 .repo-url:hover .host{color:var(--text)}
-@media (max-width:400px){.repo-url{font-size:.8125rem}}
-.repo-url .gh{width:1.4em;height:1.4em;vertical-align:-.3em}
+.repo-url .gh{width:1.4em;height:1.4em;vertical-align:-.3em;color:var(--text)}
+.head-end{display:flex;align-items:center;gap:22px;min-width:0}
+.head-end .repo-url{min-width:0}
+.theme-toggle{
+  display:none;flex:none;align-items:center;justify-content:center;
+  padding:2px;margin:0;font:inherit;line-height:0;
+  color:var(--muted);background:none;border:0;border-radius:4px;
+  cursor:pointer;transition:color .15s;
+}
+.js .theme-toggle{display:inline-flex}
+.theme-toggle:hover{color:var(--text)}
+@media (max-width:560px){
+  .repo-url{display:inline-flex;align-items:center;overflow:visible;padding:2px}
+  .repo-url:hover{text-decoration:none}
+  .repo-url .gh{margin-right:0}
+  .repo-url .label{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+  }
+}
+.sr-only{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
@@ -140,9 +192,8 @@ code{font-size:.875em}
 }
 .eyebrow{
   font-size:.9375rem;font-weight:600;letter-spacing:-.005em;
-  color:var(--accent);margin-bottom:18px;text-wrap:balance;
+  color:var(--link);margin-bottom:18px;text-wrap:balance;
 }
-@media (prefers-color-scheme: light){.eyebrow{color:var(--link)}}
 h1{font-size:clamp(2.375rem,6.4vw,4rem);letter-spacing:-.038em;line-height:1.02;text-wrap:balance}
 .lede{margin-top:22px;font-size:clamp(1.0625rem,1.6vw,1.25rem);color:var(--muted);max-width:30em}
 
@@ -203,9 +254,8 @@ section{border-top:1px solid var(--border)}
 .sec-head p{margin-top:12px;color:var(--muted)}
 .kicker{
   font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--accent);margin-bottom:14px;
+  color:var(--link);margin-bottom:14px;
 }
-@media (prefers-color-scheme: light){.kicker{color:var(--link)}}
 
 .config-grid{display:grid;gap:clamp(24px,3.5vw,40px);grid-template-columns:1fr}
 @media (min-width:700px){.config-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
@@ -240,9 +290,8 @@ section{border-top:1px solid var(--border)}
 .feature h3{font-size:1.0625rem;margin-bottom:14px}
 .feature .mark{
   width:34px;height:34px;border-radius:9px;background:var(--chip-bg);
-  display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--accent);
+  display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--link);
 }
-@media (prefers-color-scheme: light){.feature .mark{color:var(--link)}}
 .feature ul li{color:var(--muted);padding:4px 0 4px 18px;position:relative;font-size:.9375rem}
 .feature ul li::before{
   content:"";position:absolute;left:0;top:.95em;width:6px;height:1.5px;background:var(--border-strong);
@@ -313,9 +362,8 @@ section{border-top:1px solid var(--border)}
 }
 .uses .ico{
   flex:none;width:30px;height:30px;border-radius:8px;background:var(--chip-bg);
-  display:flex;align-items:center;justify-content:center;color:var(--accent);
+  display:flex;align-items:center;justify-content:center;color:var(--link);
 }
-@media (prefers-color-scheme: light){.uses .ico{color:var(--link)}}
 .uses .what{flex:1 1 0;min-width:0}
 .uses .what strong{font-weight:600;color:var(--text)}
 .uses .what span{color:var(--muted)}
@@ -375,11 +423,18 @@ section{border-top:1px solid var(--border)}
 .foot-links a{color:var(--muted)}
 .foot-links a:hover{color:var(--text)}
 
-img.logo-dark{display:none}
+img.logo-dark,.ti-to-light{display:none}
+.ti-to-dark{display:block}
 @media (prefers-color-scheme: dark){
-  img.logo-light{display:none}
-  img.logo-dark{display:block}
+  :root:not([data-theme="light"]) img.logo-light,
+  :root:not([data-theme="light"]) .ti-to-dark{display:none}
+  :root:not([data-theme="light"]) img.logo-dark,
+  :root:not([data-theme="light"]) .ti-to-light{display:block}
 }
+:root[data-theme="dark"] img.logo-light,
+:root[data-theme="dark"] .ti-to-dark{display:none}
+:root[data-theme="dark"] img.logo-dark,
+:root[data-theme="dark"] .ti-to-light{display:block}
 </style>
 </head>
 <body itemscope itemtype="https://schema.org/SoftwareApplication">
@@ -388,13 +443,53 @@ img.logo-dark{display:none}
 
 <header class="site-head">
   <div class="wrap">
-    <a class="brand" href="#main" aria-label="Clicklet home">
+    <span class="brand">
       <img class="logo-light" src="assets/logo.svg" alt="Clicklet" width="172" height="40">
       <img class="logo-dark" src="assets/logo-dark.svg" alt="Clicklet" width="172" height="40">
-    </a>
-    <a class="repo-url" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer" itemprop="sameAs"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg><span class="host">github.com/</span>tabakman/clicklet</a>
+    </span>
+    <div class="head-end">
+      <a class="repo-url" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer" itemprop="sameAs"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg><span class="label"><span class="host">github.com/</span>tabakman/clicklet</span></a>
+      <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark theme" title="Switch to dark theme">
+        <svg class="ti-to-dark" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M17.5 10.66A7.5 7.5 0 1 1 9.34 2.5a5.83 5.83 0 0 0 8.16 8.16Z"/></svg>
+        <svg class="ti-to-light" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="3.4"/><path d="M10 1.9v1.9M10 16.2v1.9M4.3 4.3l1.35 1.35M14.35 14.35l1.35 1.35M1.9 10h1.9M16.2 10h1.9M4.3 15.7l1.35-1.35M14.35 5.65l1.35-1.35"/></svg>
+      </button>
+      <span class="sr-only" id="theme-status" role="status" aria-live="polite"></span>
+    </div>
   </div>
 </header>
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById("theme-toggle");
+  var live = document.getElementById("theme-status");
+  if (!btn) return;
+  var key = "clicklet-theme";
+  var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function isDark() {
+    var set = root.getAttribute("data-theme");
+    if (set === "dark") return true;
+    if (set === "light") return false;
+    return !!(mq && mq.matches);
+  }
+  function label() {
+    var next = isDark() ? "light" : "dark";
+    btn.setAttribute("aria-label", "Switch to " + next + " theme");
+    btn.setAttribute("title", "Switch to " + next + " theme");
+  }
+  label();
+  if (mq && mq.addEventListener) mq.addEventListener("change", label);
+  else if (mq && mq.addListener) mq.addListener(label);
+  btn.addEventListener("click", function () {
+    var pick = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", pick);
+    label();
+    if (live) live.textContent = pick === "dark" ? "Dark theme." : "Light theme.";
+    try {
+      localStorage.setItem(key, pick);
+    } catch (e) {}
+  });
+})();
+</script>
 
 <main id="main">
 

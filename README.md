@@ -10,6 +10,8 @@
 
 Clicklet is a tiny Windows tray app for mapping extra mouse buttons (4 and 5) to keyboard shortcuts. It runs as a single native `.exe` with an optional config file for up to two mappings. Free and open source.
 
+[Website](https://tabakman.github.io/clicklet/) · [Download](https://github.com/tabakman/clicklet/releases/latest)
+
 ## How it works
 
 Run `Clicklet.exe`. It sits in the tray.
