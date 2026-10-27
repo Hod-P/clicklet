@@ -1,16 +1,44 @@
-# Clicklet — instructions for Codex
+# Clicklet — project guide
 
-Read `CODEX_PLAN.md` before work. Work only on the currently requested phase. Inspect `git status -sb` and `git remote -v`, and record the HEAD commit before modifications. Confirm the active branch is a dedicated feature branch, `origin` refers to the user's fork, and `upstream` refers to the author's repository. If that setup does not match, report it and request guidance rather than changing remotes yourself. Never trust suspected issues without checking the actual checked-out source.
+## Scope and workflow
 
-## Engineering priorities
+- Inspect `git status -sb`, `git remote -v`, branch and HEAD before edits.
+- Work on a dedicated branch; `origin` is Hod-P/clicklet and `upstream` is
+  tabakman/clicklet. Report unexpected setup and request guidance.
+- Check the current source before accepting a suspected defect.
+- Keep changes focused on the requested task; avoid broad or cosmetic refactors.
+- Never stage, commit, push, fetch, merge, rebase, open PRs, publish, modify
+  remotes or change local `main` without explicit authorization.
+- Never push to `upstream` or force-push.
+- Leave personal INI files, local data and files outside this repository untouched.
 
-1. **Minimal real-world input latency (top priority).** Keep `WH_MOUSE_LL` callback work minimal. No sleeping, polling, timers, asynchronous queues, UI work, locks, dynamic memory, parsing, filesystem I/O, string formatting, or logging in the hook hot path. Precompute Win32 input structures at startup. Do not introduce threads/drivers/services or speculative optimizations without measurements and approval.
-2. **Correct key ownership and state transitions.** Plain-key mappings emit key DOWN on physical XBUTTON DOWN and key UP on physical XBUTTON UP. Support holding, interleaved buttons, same-key mappings, repeated down events, and safe shutdown/disable handling. Handle `SendInput` failures honestly. No claims of guaranteed injection across UIPI or a guarantee against OS refusal to release.
-3. **Preserve compatibility and small size.** Windows 11 x64, native C++17/Win32, MSVC `/W4 /WX`, portable EXE, no new runtime dependencies. Keep existing one-shot modifier shortcuts and no-INI default `Ctrl+Enter`, unless an explicitly approved change is necessary. F6/F7 are test examples only; use existing INI keys Button4 and Button5.
-4. **Test and measure.** Use small deterministic tests with injected Win32-call stubs rather than triggering actual system input during automated tests. Test actual desktop input only with approval. Record p50/p95/p99 with method and scope, distinguish callback runtime from end-to-end latency. Never invent successful builds or benchmark results. Preserve warnings-as-errors.
+## Implementation
 
-Do not add telemetry, background services, autostart, network access, persistent logs, an installer or elevation requirement. Do not change artwork/icon licensing. Do not modify files outside the repository or overwrite the user's real INI.
+- Target Windows 11 x64 with native C++17/Win32, MSVC v143 and `/W4 /WX`.
+- Preserve the portable executable and avoid unnecessary dependencies.
+- Prioritize minimal mouse-hook latency; prepare INPUT structures at startup.
+- No sleeping, polling, timers, queues, UI work, locks, dynamic allocation,
+  parsing, filesystem I/O, formatting or logging in the hook hot path.
+- Do not introduce threads, drivers, services or speculative optimizations
+  without measurements and explicit approval.
+- Preserve existing behavior unless a change is explicitly requested, including
+  one-shot modifier shortcuts and the no-INI Button5=Ctrl+Enter default.
+- Plain keys use DOWN on mouse press and UP on release; maintain shared ownership,
+  duplicate suppression and consistent mouse-event pairing across nested events.
+- Check SendInput results and preserve bounded recovery for failed/partial sends,
+  disable and shutdown. Never promise release when Windows refuses injection.
+- Add no telemetry, network access, persistent logs, automatic startup, installer
+  or elevation requirement. Preserve original attribution and all licensing,
+  including the artwork and font notices.
 
-Never stage, commit, push, open PRs, change remotes, fetch/merge/rebase external changes, synchronize with upstream, or publish releases without explicit instructions. Never push to `upstream`, force-push, or directly modify local `main`. `upstream` is for fetching author updates; `origin` is the user's fork. Avoid broad refactors or cosmetic changes.
+## Validation and reporting
 
-After each phase report: verified facts vs assumptions; changed files; exact commands and PASS/FAIL/NOT RUN outcomes; measured latency methodology/results (if performed); remaining risks and platform limitations; `git diff --stat` and `git status`. Stop for review before starting another phase.
+- Run deterministic regression tests for production modifications; use Win32-call
+  stubs, never actual system input, in automated tests. See `tests/README.md`.
+- Never launch desktop input injection or install real hooks without explicit
+  approval, including launching Clicklet or its diagnostic executable.
+- Use `diagnostics/README.md` for separate latency instrumentation. Report sample
+  counts, method, scope and p50/p95/p99; distinguish callback time from input latency.
+- Do not invent successful builds, tests or measurements. State platform limits.
+- Finish with changed files, commands and PASS/FAIL/NOT RUN outcomes, remaining
+  risks, `git diff --stat` and `git status`; stop for review.
