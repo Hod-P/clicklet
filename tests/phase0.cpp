@@ -26,7 +26,11 @@ BOOL WINAPI TrayStub(DWORD message, PNOTIFYICONDATAW data);
 #define SetWindowsHookExW phase0::InstallStub
 #define UnhookWindowsHookEx phase0::UninstallStub
 #define Shell_NotifyIconW phase0::TrayStub
+#ifdef CLICKLET_DIAGNOSTIC_TEST
+#include "../diagnostics/instrumented.h"
+#else
 #include "../Clicklet.cpp"
+#endif
 #undef SendInput
 #undef CallNextHookEx
 #undef SetWindowsHookExW
