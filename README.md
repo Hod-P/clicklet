@@ -6,7 +6,7 @@
 
 Clicklet is a tiny Windows tray app for mapping extra mouse buttons (4 and 5) to keyboard keys or shortcuts. It runs as a single native `.exe` with an optional config file for up to two mappings. Free and open source.
 
-[Fork repository](https://github.com/Hod-P/clicklet) · [Upstream repository](https://github.com/tabakman/clicklet)
+[Fork repository](https://github.com/Hod-P/clicklet) · [Fork releases](https://github.com/Hod-P/clicklet/releases) · [Upstream repository](https://github.com/tabakman/clicklet)
 
 ## Project origin
 
@@ -140,9 +140,11 @@ Clicklet is intentionally narrow:
 Clicklet's source code is licensed under the MIT License.
 
 The original [LICENSE](LICENSE), including Tal Tabakman's copyright notice,
-must accompany distributions. The build copies it beside `Clicklet.exe`;
-include both files when packaging a compiled release. The EXE alone is not
-the complete distribution.
+must accompany distributions. The build copies it and a minimal fork notice
+(`README.txt`, from [RELEASE_README.txt](RELEASE_README.txt)) beside `Clicklet.exe`.
+Package those three files together. The EXE alone is not the complete distribution.
+See [release packaging and website notices](docs/RELEASING.md) for the exact
+contents and checks; a releases-page link does not promise an available binary.
 
 The original Clicklet logo and icons are © Tal Tabakman, all rights reserved;
 they are not MIT-licensed and have been removed from this fork's current files.

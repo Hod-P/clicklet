@@ -4,6 +4,13 @@
 `../docs/assets/placeholder.svg` are new geometric placeholders created for this
 unofficial fork. They are provided under the [MIT License](../LICENSE).
 
+The included generator constructs a square border and two circles using only
+numeric geometry and colors; it does not read, trace or incorporate upstream
+images. These are code-generated placeholders, not a claim of ownership of the
+original project or its artwork. No new copyright notice or exclusive rights
+are claimed for AI-assisted code or generated outputs; the MIT permission
+applies to the extent copyright protection exists.
+
 Reproduce them locally with `python tools/generate-placeholder.py` from the
 repository root. The generator uses only Python's standard library; Python is
 not required to build or run Clicklet. ICO frames are 16, 20, 24, 32, 40, 48,

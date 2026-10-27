@@ -31,7 +31,7 @@ BEGIN
             VALUE "InternalName",     "Clicklet"
             VALUE "LegalCopyright",   "Copyright (c) 2026 Tal Tabakman. MIT Licence."
             VALUE "OriginalFilename", "Clicklet.exe"
-            VALUE "ProductName",      "Clicklet"
+            VALUE "ProductName",      "Clicklet (unofficial fork)"
             VALUE "ProductVersion",   CLICKLET_VERSION_STRING
         END
     END
