@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\Clicklet.vcxproj" />
+  <Import Project="common.props" />
+  <ItemGroup>
+    <ClCompile Remove="@(ClCompile)" />
+    <ClCompile Include="clicklet-diagnostic.cpp" />
+    <!-- Keep the production resources; none are changed. -->
+    <ResourceCompile Remove="@(ResourceCompile)" />
+    <ResourceCompile Include="..\Clicklet.rc" />
+  </ItemGroup>
+  <ItemDefinitionGroup><ResourceCompile><AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ResourceCompile></ItemDefinitionGroup>
+  <Target Name="CopyDiagnosticNotices" AfterTargets="Build">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)..\LICENSE;$(MSBuildThisFileDirectory)..\RELEASE_README.txt" DestinationFolder="$(OutDir)" />
+  </Target>
+</Project>

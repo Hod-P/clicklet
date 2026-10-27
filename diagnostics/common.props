@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Imported after the production project, exactly like tests/phase0.vcxproj. -->
+  <PropertyGroup>
+    <TargetName>$(MSBuildProjectName)</TargetName>
+    <OutDir>$(MSBuildThisFileDirectory)..\build\latency\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\build\obj\latency\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetFileName>$(TargetName)$(TargetExt)</TargetFileName>
+    <TargetPath>$(OutDir)$(TargetFileName)</TargetPath>
+    <TargetDir>$(OutDir)</TargetDir>
+    <TLogLocation>$(IntDir)$(MSBuildProjectName).tlog\</TLogLocation>
+  </PropertyGroup>
+  <ItemDefinitionGroup><Link><SubSystem>Console</SubSystem></Link></ItemDefinitionGroup>
+</Project>
