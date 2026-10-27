@@ -536,7 +536,11 @@ static void ShowTrayMenu(void)
     AppendMenuW(menu, MF_STRING, MENU_ID_EXIT, L"Exit");
 
     POINT cursor;
-    GetCursorPos(&cursor);
+    if (!GetCursorPos(&cursor))
+    {
+        DestroyMenu(menu);
+        return;
+    }
     SetForegroundWindow(g_window);
     g_trayMenuOpen = TRUE;
     TrackPopupMenu(menu, TPM_RIGHTBUTTON, cursor.x, cursor.y, 0, g_window, NULL);
@@ -591,6 +595,11 @@ static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPA
 
     case WM_DESTROY:
         PostQuitMessage(0);
+        return 0;
+
+    case WM_ENDSESSION:
+        if (wParam)
+            UninstallHook();
         return 0;
 
     default:
@@ -878,11 +887,16 @@ static BOOL BuildIniPath(void)
     return SUCCEEDED(StringCchCatW(g_iniPath, ARRAYSIZE(g_iniPath), INI_FILE_NAME));
 }
 
-static BOOL ReadSetting(const WCHAR *key, WCHAR *value, DWORD size)
+enum class SettingResult { Absent, Present, TooLong };
+
+static SettingResult ReadSetting(const WCHAR *key, WCHAR *value, DWORD size)
 {
-    GetPrivateProfileStringW(INI_SECTION, key, INI_ABSENT, value, size, g_iniPath);
+    const DWORD length = GetPrivateProfileStringW(INI_SECTION, key, INI_ABSENT, value, size, g_iniPath);
+    // size - 1 may be a truncated prefix that becomes valid after trimming.
+    if (length >= size - 1)
+        return SettingResult::TooLong;
     if (TokenEquals(value, -1, INI_ABSENT))
-        return FALSE;
+        return SettingResult::Absent;
 
     WCHAR *start = value;
     while (*start == L' ' || *start == L'\t')
@@ -893,7 +907,7 @@ static BOOL ReadSetting(const WCHAR *key, WCHAR *value, DWORD size)
     *end = L'\0';
     if (start != value)
         MoveMemory(value, start, (size_t)(end - start + 1) * sizeof(WCHAR));
-    return TRUE;
+    return SettingResult::Present;
 }
 
 static BOOL CheckForUnknownSettings(WCHAR *problem, size_t problemSize)
@@ -954,8 +968,16 @@ static BOOL LoadConfiguration(WCHAR *problem, size_t problemSize)
 
     for (int i = 0; i < (int)ARRAYSIZE(g_mappings); ++i)
     {
-        if (!ReadSetting(g_mappings[i].iniKey, value, ARRAYSIZE(value)))
+        const SettingResult result = ReadSetting(g_mappings[i].iniKey, value, ARRAYSIZE(value));
+        if (result == SettingResult::Absent)
             continue;
+        if (result == SettingResult::TooLong)
+        {
+            StringCchPrintfW(problem, problemSize,
+                             INI_FILE_NAME L": the value for %s is too long to read.",
+                             g_mappings[i].iniKey);
+            return FALSE;
+        }
 
         if (!ParseKeystroke(&g_mappings[i], value))
         {
