@@ -17,6 +17,14 @@ LRESULT WINAPI NextStub(HHOOK hook, int code, WPARAM message, LPARAM data);
 HHOOK WINAPI InstallStub(int kind, HOOKPROC callback, HINSTANCE instance, DWORD thread);
 BOOL WINAPI UninstallStub(HHOOK hook);
 BOOL WINAPI TrayStub(DWORD message, PNOTIFYICONDATAW data);
+LRESULT WINAPI DefaultWindowStub(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
+HMENU WINAPI CreateMenuStub();
+BOOL WINAPI AppendMenuStub(HMENU menu, UINT flags, UINT_PTR id, LPCWSTR text);
+BOOL WINAPI DestroyMenuStub(HMENU menu);
+BOOL WINAPI CursorStub(LPPOINT point);
+BOOL WINAPI ForegroundStub(HWND window);
+BOOL WINAPI TrackMenuStub(HMENU menu, UINT flags, int x, int y, int reserved, HWND window, const RECT *rect);
+BOOL WINAPI PostStub(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
 }
 
 // Headers are already included, so these substitutions affect only Clicklet's
@@ -26,6 +34,14 @@ BOOL WINAPI TrayStub(DWORD message, PNOTIFYICONDATAW data);
 #define SetWindowsHookExW phase0::InstallStub
 #define UnhookWindowsHookEx phase0::UninstallStub
 #define Shell_NotifyIconW phase0::TrayStub
+#define DefWindowProcW phase0::DefaultWindowStub
+#define CreatePopupMenu phase0::CreateMenuStub
+#define AppendMenuW phase0::AppendMenuStub
+#define DestroyMenu phase0::DestroyMenuStub
+#define GetCursorPos phase0::CursorStub
+#define SetForegroundWindow phase0::ForegroundStub
+#define TrackPopupMenu phase0::TrackMenuStub
+#define PostMessageW phase0::PostStub
 #ifdef CLICKLET_DIAGNOSTIC_TEST
 #include "../diagnostics/instrumented.h"
 #else
@@ -36,6 +52,14 @@ BOOL WINAPI TrayStub(DWORD message, PNOTIFYICONDATAW data);
 #undef SetWindowsHookExW
 #undef UnhookWindowsHookEx
 #undef Shell_NotifyIconW
+#undef DefWindowProcW
+#undef CreatePopupMenu
+#undef AppendMenuW
+#undef DestroyMenu
+#undef GetCursorPos
+#undef SetForegroundWindow
+#undef TrackPopupMenu
+#undef PostMessageW
 
 namespace phase0
 {
@@ -55,6 +79,19 @@ struct Stubs
     UINT installCalls;
     UINT uninstallCalls;
     UINT trayCalls;
+    UINT menuCreates;
+    UINT menuDestroys;
+    UINT menuTracks;
+    UINT cursorCalls;
+    UINT foregroundCalls;
+    UINT postCalls;
+    BOOL cursorOK;
+    bool reenterMenu;
+    bool menuOpenDuringTrack;
+    int menuX;
+    int menuY;
+    UINT menuFlags;
+    UINT postedMessage;
     UINT accepted;
     BOOL installOK;
     BOOL uninstallOK;
@@ -144,15 +181,74 @@ BOOL WINAPI TrayStub(DWORD, PNOTIFYICONDATAW)
     return TRUE;
 }
 
+LRESULT WINAPI DefaultWindowStub(HWND, UINT message, WPARAM, LPARAM)
+{
+    return message == WM_QUERYENDSESSION ? TRUE : 0;
+}
+
+HMENU WINAPI CreateMenuStub()
+{
+    ++s.menuCreates;
+    return reinterpret_cast<HMENU>(static_cast<ULONG_PTR>(2));
+}
+
+BOOL WINAPI AppendMenuStub(HMENU, UINT, UINT_PTR, LPCWSTR) { return TRUE; }
+
+BOOL WINAPI DestroyMenuStub(HMENU)
+{
+    ++s.menuDestroys;
+    return TRUE;
+}
+
+BOOL WINAPI CursorStub(LPPOINT point)
+{
+    ++s.cursorCalls;
+    // Failure provides no usable position. Write deterministic data so the
+    // pre-fix test detects misuse without evaluating uninitialized coordinates.
+    *point = { 127, -83 };
+    return s.cursorOK;
+}
+
+BOOL WINAPI ForegroundStub(HWND)
+{
+    ++s.foregroundCalls;
+    return TRUE;
+}
+
+BOOL WINAPI TrackMenuStub(HMENU, UINT flags, int x, int y, int, HWND, const RECT *)
+{
+    ++s.menuTracks;
+    s.menuX = x;
+    s.menuY = y;
+    s.menuFlags = flags;
+    s.menuOpenDuringTrack = g_trayMenuOpen != FALSE;
+    if (s.reenterMenu)
+    {
+        s.reenterMenu = false;
+        ShowTrayMenu();
+    }
+    return TRUE;
+}
+
+BOOL WINAPI PostStub(HWND, UINT message, WPARAM, LPARAM)
+{
+    ++s.postCalls;
+    s.postedMessage = message;
+    return TRUE;
+}
+
 static void Reset()
 {
     s = {};
     s.accepted = kAcceptAll;
     s.installOK = TRUE;
     s.uninstallOK = TRUE;
+    s.cursorOK = TRUE;
     s_record = true;
     g_enabled = TRUE;
     g_hook = NULL;
+    g_trayMenuOpen = FALSE;
+    g_trayUpEndsDoubleClick = FALSE;
     g_iniPath[0] = L'\0';
     ZeroMemory(g_keys, sizeof(g_keys));
     for (Mapping &mapping : g_mappings)
@@ -447,6 +543,69 @@ static bool ShutdownReleasesPlainKey()
     CHECK(!g_mappings[0].downSwallowed && !g_mappings[1].downSwallowed);
     CHECK(g_hook == NULL && s.uninstallCalls == 1 && s.sendCalls == 3);
     CHECK(!s.keyboard[VK_F6]);
+    return true;
+}
+
+static bool EndSessionReleasesHolds()
+{
+    for (bool shared : { false, true })
+    {
+        Reset();
+        CHECK(Configure(&g_mappings[0], L"f6"));
+        CHECK(Configure(&g_mappings[1], shared ? L"f6" : L"f7"));
+        g_hook = FakeHook();
+        CHECK(Event(XBUTTON1, WM_XBUTTONDOWN) == 1);
+        CHECK(Event(XBUTTON2, WM_XBUTTONDOWN) == 1);
+        const UINT before = s.sendCalls;
+        CHECK(WindowProc(NULL, WM_QUERYENDSESSION, 0, ENDSESSION_LOGOFF) == TRUE);
+        CHECK(WindowProc(NULL, WM_ENDSESSION, FALSE, ENDSESSION_LOGOFF) == 0);
+        CHECK(g_enabled && g_hook == FakeHook() && s.uninstallCalls == 0);
+        CHECK(s.sendCalls == before && g_mappings[0].keyOwned && g_mappings[1].keyOwned);
+        CHECK(WindowProc(NULL, WM_ENDSESSION, TRUE, ENDSESSION_LOGOFF) == 0);
+        CHECK(!g_enabled && g_hook == NULL && s.uninstallCalls == 1);
+        CHECK(s.sendCalls == before * 2 && s.trayCalls == 0);
+        CHECK(!g_mappings[0].keyOwned && !g_mappings[1].keyOwned);
+        CHECK(!g_mappings[0].downSeen && !g_mappings[1].downSeen);
+        for (bool held : s.keyboard)
+            CHECK(!held);
+    }
+    return true;
+}
+
+static bool EndSessionPendingRecovery()
+{
+    for (bool released : { false, true })
+    {
+        Reset();
+        CHECK(Configure(&g_mappings[0], L"f6"));
+        CHECK(Configure(&g_mappings[1], L"ctrl+enter"));
+        g_hook = FakeHook();
+        CHECK(Event(XBUTTON1, WM_XBUTTONDOWN) == 1);
+        s.returns[1] = 2; // Partial shortcut, then refuse both immediate UP retries.
+        for (UINT i = 2; i < 6; ++i)
+            s.returns[i] = 0;
+        s.returnCount = 6;
+        CHECK(Event(XBUTTON2, WM_XBUTTONDOWN) == 1);
+        CHECK(s.sendCalls == 6 && g_mappings[1].pendingUps != 0);
+        const UINT pending = g_mappings[1].pendingUps;
+        s.accepted = released ? kAcceptAll : 0;
+        CHECK(WindowProc(NULL, WM_ENDSESSION, FALSE, 0) == 0);
+        CHECK(s.sendCalls == 6 && g_enabled && g_hook == FakeHook());
+        CHECK(WindowProc(NULL, WM_ENDSESSION, TRUE, 0) == 0);
+        CHECK(s.sendCalls == (released ? 9u : 12u));
+        CHECK(!g_enabled && g_hook == NULL && s.uninstallCalls == 1);
+        CHECK(!g_mappings[0].keyOwned && g_mappings[0].key->owners == 0);
+        CHECK(g_mappings[0].key->held == !released);
+        CHECK(g_mappings[1].pendingUps == (released ? 0u : pending));
+        CHECK(s.keyboard[VK_F6] == !released && s.keyboard[VK_CONTROL] == !released);
+        CHECK(s.keyboard[VK_RETURN] == !released);
+        // A later cleanup can retry unresolved releases without acquiring a new hold.
+        s.accepted = kAcceptAll;
+        UninstallHook();
+        CHECK(!g_mappings[0].key->held && g_mappings[1].pendingUps == 0);
+        for (bool held : s.keyboard)
+            CHECK(!held);
+    }
     return true;
 }
 
@@ -1083,6 +1242,63 @@ static bool PresentConfiguration()
     return true;
 }
 
+static bool TruncatedConfiguration()
+{
+    const WCHAR *fixtures[] = { L"fixtures\\truncated-button4.ini", L"fixtures\\truncated-button5.ini" };
+    for (int i = 0; i < 2; ++i)
+    {
+        Reset();
+        CHECK(FixturePath(fixtures[i]));
+        // The first 95 characters are "f6" plus spaces; trimming that prefix
+        // would accept F6 even though the complete "f6 ... +f7" is invalid.
+        WCHAR prefix[INI_VALUE_MAX];
+        CHECK(GetPrivateProfileStringW(INI_SECTION, g_mappings[i].iniKey, L"", prefix,
+                                       ARRAYSIZE(prefix), g_iniPath) == ARRAYSIZE(prefix) - 1);
+        WCHAR problem[256] = {};
+        CHECK(!LoadConfiguration(problem, ARRAYSIZE(problem)));
+        CHECK(std::wcsstr(problem, g_mappings[i].iniKey) != nullptr);
+        CHECK(std::wcsstr(problem, L"too long") != nullptr);
+        CHECK(g_mappings[i].keystrokeCount == 0);
+    }
+    return true;
+}
+
+static bool ConfigurationValueBoundary()
+{
+    CHECK(FixturePath(L"fixtures\\value-boundary.ini"));
+    WCHAR value[INI_VALUE_MAX];
+    for (const Mapping &mapping : g_mappings)
+        CHECK(GetPrivateProfileStringW(INI_SECTION, mapping.iniKey, L"", value,
+                                       ARRAYSIZE(value), g_iniPath) == ARRAYSIZE(value) - 2);
+    WCHAR problem[256] = {};
+    CHECK(LoadConfiguration(problem, ARRAYSIZE(problem)));
+    PrepareMappings();
+    CHECK(Event(XBUTTON1, WM_XBUTTONDOWN) == 1);
+    CHECK(Event(XBUTTON2, WM_XBUTTONDOWN) == 1);
+    CHECK(Key(s.batches[0], 0, VK_F6, 0) && Key(s.batches[1], 0, VK_F7, 0));
+    return true;
+}
+
+static bool TrayMenuCursorFailure()
+{
+    CHECK(Configure(&g_mappings[0], L"f6"));
+    s.cursorOK = FALSE;
+    ShowTrayMenu();
+    CHECK(s.cursorCalls == 1 && s.menuCreates == 1 && s.menuDestroys == 1);
+    CHECK(s.menuTracks == 0 && s.foregroundCalls == 0 && s.postCalls == 0);
+    CHECK(!g_trayMenuOpen);
+    // A later successful click still opens at the cursor and suppresses nesting.
+    s.cursorOK = TRUE;
+    s.reenterMenu = true;
+    ShowTrayMenu();
+    CHECK(s.cursorCalls == 2 && s.menuCreates == 2 && s.menuDestroys == 2);
+    CHECK(s.menuTracks == 1 && s.foregroundCalls == 1 && s.postCalls == 1);
+    CHECK(s.menuX == 127 && s.menuY == -83 && s.menuFlags == TPM_RIGHTBUTTON);
+    CHECK(s.menuOpenDuringTrack && !g_trayMenuOpen && s.postedMessage == WM_NULL);
+    CHECK(s.sendCalls == 0 && s.installCalls == 0 && s.uninstallCalls == 0);
+    return true;
+}
+
 static bool RunTests()
 {
     const struct { const char *name; bool (*run)(); } tests[] =
@@ -1102,6 +1318,8 @@ static bool RunTests()
         { "disable / failed unhook / re-enable", DisableAndFailedUnhook },
         { "failed hook install leaves disabled", EnableFailure },
         { "shutdown cleanup releases plain key", ShutdownReleasesPlainKey },
+        { "WM_ENDSESSION releases distinct/shared holds; canceled shutdown preserves them", EndSessionReleasesHolds },
+        { "WM_ENDSESSION pending shortcut/plain recovery and bounded refusal", EndSessionPendingRecovery },
         { "failed plain DOWN preserves pass-through until UP", FailedPlainDownIsPaired },
         { "UP retry / retained pending release / next press", ReleaseRetryAndPendingRecovery },
         { "pending release refusal passes new press", PendingReleaseRefusesNewPress },
@@ -1128,6 +1346,9 @@ static bool RunTests()
         { "plain hold versus legacy modifier shortcut collision policy", PlainHoldShortcutCollisionPolicy },
         { "absent test INI uses Ctrl+Enter default", DefaultConfiguration },
         { "present test INI replaces default", PresentConfiguration },
+        { "truncated INI value cannot become a different mapping", TruncatedConfiguration },
+        { "complete INI value below truncation boundary preserves whitespace semantics", ConfigurationValueBoundary },
+        { "tray cursor failure cleans up; later success preserves menu behavior", TrayMenuCursorFailure },
     };
     UINT passed = 0;
     for (const auto &test : tests)

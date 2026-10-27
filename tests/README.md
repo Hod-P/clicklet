@@ -2,9 +2,10 @@
 
 This standalone console harness includes the current `Clicklet.cpp` and
 substitutes recording stubs for SendInput, CallNextHookEx, hook install/uninstall,
-and tray notification. It never calls the application's wWinMain or installs an
-OS hook. Configuration tests read only the fixtures copied beside the harness
-and an explicitly absent test filename; they do not use the user's Clicklet.ini.
+tray notification, default window processing and tray menu APIs. It never calls
+the application's wWinMain or installs an OS hook. Configuration tests read only
+the fixtures copied beside the harness and an explicitly absent test filename;
+they do not use the user's Clicklet.ini.
 
 Regression tests cover plain-key holds, duplicate DOWN, independent/shared ownership,
 all recognized plain keys, failure pairing, bounded release retries, disable/exit,
@@ -23,6 +24,12 @@ send forwards the mouse press only if its reserved UP has not already been
 consumed. Otherwise both original edges are consumed. The runner reports all
 failed groups before returning failure. Test cases and the complete group list
 are in [phase0.cpp](phase0.cpp).
+
+Lifecycle regressions send WM_ENDSESSION directly to the window procedure,
+covering canceled shutdown, shared/distinct holds and bounded pending-release
+recovery. INI fixtures cover truncation that would otherwise accept a different
+mapping and complete values just below the truncation boundary. Tray menu stubs
+cover cursor lookup failure, cleanup, later success and nested-menu suppression.
 
 From the repository root in PowerShell, using MSBuild from an installation with
 v143 and the Windows SDK (adjust the executable path for your installation):
