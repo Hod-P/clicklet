@@ -14,7 +14,7 @@
 #define MENU_ID_NONE          0
 
 // Kept out of Clicklet.rc: one definition for the About text, the band measurement and the launch.
-#define CLICKLET_REPOSITORY_URL L"https://github.com/tabakman/clicklet"
+#define CLICKLET_REPOSITORY_URL L"https://github.com/Hod-P/clicklet"
 
 #define INI_FILE_NAME     L"Clicklet.ini"
 #define INI_SECTION       L"Mapping"
