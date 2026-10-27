@@ -1,158 +1,149 @@
-# Clicklet (unofficial fork)
+# Clicklet — Personal Fork
 
-<img alt="Geometric placeholder icon" src="docs/assets/placeholder.svg" width="48" height="48">
+I forked Clicklet for personal use because I wanted to remap two mouse side
+buttons without keeping the manufacturer's software running. The original
+application was already lightweight. I focused on correctness, held-key
+behavior, error recovery and performance measurements instead of speculative
+optimization, and deliberately kept the original Win32 architecture.
 
-**Map your extra mouse buttons. That’s it.**
+This is an unofficial fork of [Clicklet](https://github.com/tabakman/clicklet),
+originally developed by Tal Tabakman. It is not affiliated with or endorsed by
+the original developer. [Fork source](https://github.com/Hod-P/clicklet).
 
-Clicklet is a tiny Windows tray app for mapping extra mouse buttons (4 and 5) to keyboard keys or shortcuts. It runs as a single native `.exe` with an optional config file for up to two mappings. Free and open source.
+## Changes from upstream
 
-[Fork repository](https://github.com/Hod-P/clicklet) · [Fork releases](https://github.com/Hod-P/clicklet/releases) · [Upstream repository](https://github.com/tabakman/clicklet)
+- Plain keys emit KeyDown on mouse press and KeyUp on release, allowing holds.
+- Shared-key ownership keeps a key held until the last owning button releases it.
+- Duplicate plain-key presses and nested shortcut dispatches are suppressed.
+- `SendInput` results are checked, with bounded release retries and recovery
+  after failed or partial sends.
+- Reentrancy and state-recovery fixes preserve ownership and mouse-event pairing
+  across nested events, disable and shutdown.
+- Deterministic regression tests use Win32-call stubs without desktop injection.
+- Separate latency measurement infrastructure leaves production builds
+  uninstrumented.
 
-## Project origin
+## Configuration and use
 
-This is an unofficial modified fork of Clicklet, originally developed by
-Tal Tabakman. The original source code is licensed under the [MIT License](LICENSE).
-This fork includes changes to mouse-button handling, held-key remapping, error
-recovery and regression tests. It is not affiliated with or endorsed by the
-original developer. The [upstream project](https://github.com/tabakman/clicklet)
-and its releases are separate from this fork.
-
-## How it works
-
-Run `Clicklet.exe`. It sits in the tray.
-
-By default, Button 5 sends Ctrl+Enter.
-
-Want something else? Add `Clicklet.ini` next to the executable:
+Windows 11 x64. Run `Clicklet.exe` without arguments; it lives in the tray.
+With no `Clicklet.ini`, Button 5 sends **Ctrl+Enter** and Button 4 stays normal.
+To configure either button, save `Clicklet.ini` beside the executable without
+a byte-order mark (BOM):
 
 ```ini
 [Mapping]
-Button4=ctrl+c
-Button5=ctrl+v
+Button4=f6
+Button5=f7
 ```
 
-That’s the whole config.
+These are examples, not fixed assignments. A present INI replaces the default:
+omitted buttons keep their normal mouse behavior. Empty or invalid mappings,
+unknown settings under `[Mapping]`, and a file with no mappings are reported at
+startup. Restart Clicklet after editing the file. See also
+[Clicklet.ini.sample](Clicklet.ini.sample).
 
-Leave a button out and it stays normal. No config file means Button 5 defaults to Ctrl+Enter.
+Plain keys stay down for the physical duration of the mouse press. Duplicate
+DOWN events are ignored until release; both buttons can independently hold
+different keys or share the same key. Clicklet does not generate repeat events.
 
-Invalid settings are reported at startup.
+For one-shot shortcuts, use modifiers followed by one key, separated by `+`:
+`ctrl+c`, `ctrl+v`, `ctrl+shift+v`, or `win+shift+s`. Modifiers are Ctrl
+(`control`), Alt, Shift and Win (`windows`), in any combination. Shortcuts send
+their full press/release sequence on mouse press; they do not hold modifiers.
+Sequential shortcut DOWN events retain the original repeat behavior.
 
-Save `Clicklet.ini` without a byte-order mark (BOM).
+Key names are case-insensitive. Supported keys are letters A–Z, digits 0–9,
+F1–F24, `enter` (`return`), `tab`, `esc` (`escape`), `space`, `backspace`,
+`delete` (`del`), `insert` (`ins`), `home`, `end`, `pageup` (`pgup`),
+`pagedown` (`pgdn`), `up`, `down`, `left` and `right`.
+Only buttons 4 and 5 are remapped: no left/middle/right-click remapping,
+media or volume keys, sequences, macros or per-application profiles.
 
-## Use it for
+The tray menu lists mappings and provides Enabled, About and Exit actions.
+Clicklet does not add itself to startup. To start it when signing in, manually
+place a shortcut to `Clicklet.exe` in the folder opened with `shell:startup`.
 
-- **Claude Code & AI tools** — put frequently used shortcuts on your mouse
-- **Gmail and Outlook** — send with Ctrl+Enter
-- **JupyterLab** — run the selected cell with Ctrl+Enter
-- **Copy and paste** — Ctrl+C and Ctrl+V
-- **Paste plain text** — Ctrl+Shift+V in apps that support it
-- **Close a tab** — Ctrl+W
-- **Screenshot** — Win+Shift+S
+## Performance
 
-## Supported shortcuts
+The verified Phase 2C session used manual physical side-button presses on
+Windows 11 x64 with `Button4=f6` and `Button5=f7`. The separate diagnostic
+build timestamped hook entry and receipt in a controlled keyboard-message
+handler using QueryPerformanceCounter (QPC).
 
-Each button can send one supported key, optionally combined with Ctrl, Alt, Shift, Win, or any combination of them.
+| Observation | Result |
+|---|---:|
+| Physical press/release cycles | 527 (296 Mouse4, 231 Mouse5) |
+| Keyboard events correlated | 1,054 / 1,054 |
+| Median hook-to-receiver software latency | Approximately 0.13 ms |
+| Worst observed hook-to-receiver latency | 0.6122 ms |
+| Observed correlation or ordering errors | 0 |
 
-Supported keys: letters, digits, F1–F24, Enter, Tab, Esc, Space, Backspace, Delete, Insert, Home, End, Page Up, Page Down, and arrow keys.
+Per-button/edge medians ranged from 0.1241 to 0.1317 ms. These instrumented
+software measurements include scheduling and message dispatch, exclude device
+and pre-hook delay, and are **not physical-button-to-application latency**.
+No direct benchmark comparison with upstream Clicklet or Razer Synapse was
+performed. A single measurement session does not establish guaranteed tail
+latency. No production optimization was justified by the measurements.
+See [diagnostic methodology and limitations](diagnostics/README.md) and
+[simulated callback benchmarks](tests/README.md).
 
-Modifiers are optional, so a bare key such as `f5` is valid.
+## Build and test
 
-Bare keys go down when the mouse button is pressed and up when it is released.
-For example, `Button4=f6` holds F6 for the physical duration of the Button 4
-press; `Button5=f7` independently does the same for F7. These are examples,
-not fixed assignments.
-Duplicate presses are ignored until release. If both buttons map to the same
-bare key, it stays down until both are released. Modifier shortcuts remain
-one-shot combinations sent on press. Clicklet does not generate repeat events.
+Clicklet is a portable native C++17/Win32 application with no installer or
+additional runtime to install. Build on Windows with MSVC v143, the Windows SDK
+and MSBuild. From the repository root in PowerShell, adjust the MSBuild path
+for your installation:
 
-One shortcut per button. No sequences or macros.
-
-## Small by design
-
-- Single native `.exe` under 400 KB
-- No installer
-- No runtime to install
-- No admin rights
-- No polling while idle
-- Optional config with up to two mappings
-
-## Private by design
-
-- No network connections
-- No telemetry
-- No logging
-- No file or registry writes
-
-The application source is one C++ file; regression tests are in `tests/`.
-
-## Tray
-
-The tray menu shows each mapped button and its shortcut.
-
-Enable or disable Clicklet from the menu, or open the About box.
-
-## Start with Windows
-
-Clicklet doesn't add itself to startup.
-
-To run it when you sign in, add a shortcut to `Clicklet.exe` in:
-
-```text
-shell:startup
+```powershell
+$msbuild = 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe'
+& $msbuild Clicklet.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /v:minimal /nologo
+& $msbuild tests\phase0.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /v:minimal /nologo
+& .\build\phase0\x64\Release\phase0.exe --tests
 ```
 
-## Limits
+The production output is `build/x64/Release/Clicklet.exe`. Projects retain
+`/W4 /WX` and static CRT linking (`/MT`). Regression tests use recording stubs;
+they install no hook and generate no desktop input. See
+[test coverage and benchmark commands](tests/README.md) and
+[separate diagnostic builds and safe tests](diagnostics/README.md).
+Launching Clicklet or the diagnostic receiver for desktop input testing during
+agent-assisted work requires explicit approval.
 
-Clicklet is intentionally narrow:
+## Windows and input limitations
 
-- Mouse buttons 4 and 5 only
-- One shortcut per button
-- No sequences or macros
-- No per-app profiles
-- No media or volume keys
-- Never remaps left, right, or middle click
-- Windows UIPI can block input to apps running at a higher integrity level,
-  including apps running as administrator
-- Injected mouse events are ignored; target apps may reject synthetic input
-- Mouse-vendor software can intercept the side buttons
-- Release on disable/exit is best effort: Windows can refuse injected input.
-  Physical keys/modifiers and a one-shot shortcut using the same target key can
-  interfere with a mapped hold; Clicklet does not track the physical keyboard.
-- Unsigned, so Windows SmartScreen may warn on first run
+- Windows UIPI can block injection into higher-integrity applications, including
+  applications running as administrator. Clicklet does not require elevation.
+- Target applications may reject synthetic input; mouse-vendor software or other
+  hooks can intercept side buttons. Injected mouse events are ignored.
+- Release on disable or exit is best effort: Windows can refuse `SendInput`,
+  including recovery releases. Removing the hook also prevents interception of
+  subsequent mouse releases.
+- Clicklet does not track the physical keyboard. Physically held keys/modifiers,
+  or a one-shot shortcut using the same target key, can interfere with a hold.
+  Partial shortcut recovery assumes the accepted input count is a prefix of
+  the requested batch; this is a recovery model, not a Windows guarantee.
+- Unsigned builds may trigger a Windows SmartScreen warning.
 
-## Specs
+The production application adds no telemetry, network access, persistent logs,
+background service or polling loop. Diagnostic captures are separate,
+explicitly run development tools.
 
-| | |
-|---|---|
-| Platform | Windows 11, x64 |
-| Size | Under 400 KB |
-| Language | C++ / Win32 |
-| Dependencies | None to install |
-| Install | Portable |
-| Admin | Not required |
-| Config | Optional `Clicklet.ini` |
-| Mappings | Up to 2 |
-| Price | Free |
-| Code license | MIT |
+## Attribution, artwork and packaging
 
-## License
+Source code is licensed under the [MIT License](LICENSE), including the original
+Copyright (c) 2026 Tal Tabakman notice. Preserve that notice when redistributing.
 
-Clicklet's source code is licensed under the MIT License.
+The original logo and icons are © Tal Tabakman, all rights reserved, and are
+not MIT-licensed. They have been removed from the current tree but may remain
+in Git history. Current geometric assets are independently code-generated
+**placeholders**, provided under MIT; they are not final artwork. See
+[artwork provenance and regeneration](res/LICENSE.md). The website's Inter font
+retains its separate [SIL Open Font License](docs/assets/fonts/Inter-LICENSE.txt).
+The retained Clicklet name carries no claim of permission or trademark clearance.
 
-The original [LICENSE](LICENSE), including Tal Tabakman's copyright notice,
-must accompany distributions. The build copies it and a minimal fork notice
-(`README.txt`, from [RELEASE_README.txt](RELEASE_README.txt)) beside `Clicklet.exe`.
-Package those three files together. The EXE alone is not the complete distribution.
-See [release packaging and website notices](docs/RELEASING.md) for the exact
-contents and checks; a releases-page link does not promise an available binary.
-
-The original Clicklet logo and icons are © Tal Tabakman, all rights reserved;
-they are not MIT-licensed and have been removed from this fork's current files.
-The new generic placeholders are independently generated locally and provided
-under MIT. See [artwork provenance and regeneration](res/LICENSE.md).
-The website's bundled Inter font retains its separate
-[SIL Open Font License](docs/assets/fonts/Inter-LICENSE.txt).
-
-This cleanup does not assert permission or trademark clearance for the retained
-Clicklet name. Original graphics may remain in Git history; do not include
-historical artwork or old build artifacts in a fork release.
+For a binary package, rebuild and put exactly `Clicklet.exe`, `LICENSE` and
+`README.txt` together. The build copies the license and
+[fork distribution notice](RELEASE_README.txt) beside the EXE. Exclude personal
+INI files, historical artwork and old build artifacts. Follow
+[release packaging and website notices](docs/RELEASING.md) for checks and
+source/website distribution requirements.
