@@ -1,6 +1,6 @@
 // IDI_APPICON must keep the lowest icon id: Explorer shows the lowest-numbered icon group.
 #define IDI_APPICON        1
-#define IDI_TRAY_ENABLED   2
+#define IDI_TRAY_ENABLED   IDI_APPICON
 #define IDI_TRAY_DISABLED  3
 
 #define IDB_ABOUT_LOGO     101

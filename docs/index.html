@@ -3,18 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clicklet: Tiny, portable mouse mapper for Windows</title>
-<meta name="description" content="Clicklet is a tiny Windows tray app that maps mouse buttons 4 and 5 to keyboard shortcuts. One native app, 376&nbsp;KB, portable, free and open source.">
+<title>Clicklet unofficial fork: Mouse mapper for Windows</title>
+<meta name="description" content="Clicklet is a tiny Windows tray app that maps mouse buttons 4 and 5 to keyboard shortcuts. Unofficial modified fork. Portable, free and open source.">
 <meta name="color-scheme" content="light dark">
-<link rel="canonical" href="https://tabakman.github.io/clicklet/">
-<link rel="icon" type="image/svg+xml" href="assets/appicon.svg">
-<link rel="icon" type="image/png" sizes="512x512" href="assets/appicon_512.png">
-<link rel="apple-touch-icon" href="assets/appicon_512.png">
+<link rel="icon" type="image/svg+xml" href="assets/placeholder.svg">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://tabakman.github.io/clicklet/">
-<meta property="og:title" content="Clicklet: Tiny, portable mouse mapper for Windows">
-<meta property="og:description" content="A tiny Windows tray app that maps mouse buttons 4 and 5 to keyboard shortcuts. One native app, 376&nbsp;KB, portable, free and open source.">
-<meta property="og:image" content="https://tabakman.github.io/clicklet/assets/appicon_512.png">
+<meta property="og:title" content="Clicklet unofficial fork: Mouse mapper for Windows">
+<meta property="og:description" content="A tiny Windows tray app that maps mouse buttons 4 and 5 to keyboard shortcuts. Unofficial modified fork. Portable, free and open source.">
 <meta name="twitter:card" content="summary">
 <link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <script>
@@ -423,36 +418,20 @@ section{border-top:1px solid var(--border)}
 .foot-links a{color:var(--muted)}
 .foot-links a:hover{color:var(--text)}
 
-img.logo-dark,.ti-to-light{display:none}
-.ti-to-dark{display:block}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) img.logo-light,
-  :root:not([data-theme="light"]) .ti-to-dark{display:none}
-  :root:not([data-theme="light"]) img.logo-dark,
-  :root:not([data-theme="light"]) .ti-to-light{display:block}
-}
-:root[data-theme="dark"] img.logo-light,
-:root[data-theme="dark"] .ti-to-dark{display:none}
-:root[data-theme="dark"] img.logo-dark,
-:root[data-theme="dark"] .ti-to-light{display:block}
 </style>
 </head>
 <body itemscope itemtype="https://schema.org/SoftwareApplication">
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="gh-mark" viewBox="0 0 16 16"><path fill="currentColor" d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></symbol></svg>
+
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="site-head">
   <div class="wrap">
     <span class="brand">
-      <img class="logo-light" src="assets/logo.svg" alt="Clicklet" width="172" height="40">
-      <img class="logo-dark" src="assets/logo-dark.svg" alt="Clicklet" width="172" height="40">
+      <img src="assets/placeholder.svg" alt="" width="40" height="40"> <span>Clicklet (unofficial fork)</span>
     </span>
     <div class="head-end">
-      <a class="repo-url" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer" itemprop="sameAs"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg><span class="label"><span class="host">github.com/</span>tabakman/clicklet</span></a>
-      <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark theme" title="Switch to dark theme">
-        <svg class="ti-to-dark" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M17.5 10.66A7.5 7.5 0 1 1 9.34 2.5a5.83 5.83 0 0 0 8.16 8.16Z"/></svg>
-        <svg class="ti-to-light" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="3.4"/><path d="M10 1.9v1.9M10 16.2v1.9M4.3 4.3l1.35 1.35M14.35 14.35l1.35 1.35M1.9 10h1.9M16.2 10h1.9M4.3 15.7l1.35-1.35M14.35 5.65l1.35-1.35"/></svg>
-      </button>
+      <a class="repo-url" href="https://github.com/Hod-P/clicklet" target="_blank" rel="noopener noreferrer" itemprop="sameAs"><span class="label"><span class="host">github.com/</span>Hod-P/clicklet</span></a>
+      <button class="theme-toggle" type="button" id="theme-toggle" aria-label="Switch to dark theme" title="Switch to dark theme">&#9680;</button>
       <span class="sr-only" id="theme-status" role="status" aria-live="polite"></span>
     </div>
   </div>
@@ -496,17 +475,21 @@ img.logo-dark,.ti-to-light{display:none}
   <div class="hero">
     <div class="wrap">
       <div>
-        <p class="eyebrow">Tiny, portable Windows tray app</p>
+        <p class="eyebrow">Unofficial modified fork</p>
+        <p>Originally developed by Tal Tabakman; original source code licensed under MIT.
+        This fork changes mouse-button handling, held-key remapping, error recovery and regression tests.
+        It is not affiliated with or endorsed by the original developer.
+        <a href="https://github.com/tabakman/clicklet">Upstream project</a>.</p>
         <h1>Put your keyboard shortcuts on your mouse.</h1>
         <p class="lede">Clicklet maps mouse buttons 4 and 5 to any shortcut you like: Ctrl+Enter, Ctrl+C, Win+Shift+S. One&nbsp;native app, an optional config file, no ads, no tracking. Free and open source.</p>
         <div class="cta">
-          <a class="btn btn-primary" href="https://github.com/tabakman/clicklet/releases/download/v1.0.0/Clicklet-1.0.0-win-x64.zip" target="_blank" rel="noopener noreferrer" itemprop="downloadUrl">
-            <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6v8.2M4.6 6.6 8 10l3.4-3.4M2 11.6v1.3a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1.3"/></svg>
-            Download for Windows
+          <a class="btn btn-primary" href="https://github.com/Hod-P/clicklet/releases" target="_blank" rel="noopener noreferrer" itemprop="downloadUrl">
+
+            Fork releases
           </a>
-          <a class="btn btn-secondary" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>View on GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/Hod-P/clicklet" target="_blank" rel="noopener noreferrer">View on GitHub</a>
         </div>
-        <p class="cta-specs">Windows&nbsp;x64 <span class="sep" aria-hidden="true">&middot;&nbsp;</span>376&nbsp;KB <span class="sep" aria-hidden="true">&middot;&nbsp;</span>Portable <span class="sep" aria-hidden="true">&middot;&nbsp;</span>MIT <span class="sep" aria-hidden="true">&middot;&nbsp;</span><a href="https://github.com/tabakman/clicklet/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="All releases on GitHub"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>All&nbsp;releases</a></p>
+        <p class="cta-specs">Windows&nbsp;x64 <span class="sep" aria-hidden="true">&middot;&nbsp;</span>Under 400&nbsp;KB <span class="sep" aria-hidden="true">&middot;&nbsp;</span>Portable <span class="sep" aria-hidden="true">&middot;&nbsp;</span>MIT <span class="sep" aria-hidden="true">&middot;&nbsp;</span><a href="https://github.com/Hod-P/clicklet/releases" target="_blank" rel="noopener noreferrer" aria-label="All releases on GitHub">All&nbsp;releases</a></p>
       </div>
 
       <figure class="mock">
@@ -521,7 +504,7 @@ img.logo-dark,.ti-to-light{display:none}
             <li>Exit</li>
           </ul>
           <div class="tray-strip" aria-hidden="true">
-            <img src="assets/appicon.svg" alt="" width="17" height="17">
+            <img src="assets/placeholder.svg" alt="" width="17" height="17">
             <span class="clock" id="tb-clock">09:41</span>
           </div>
 <script>
@@ -590,9 +573,6 @@ img.logo-dark,.ti-to-light{display:none}
       </div>
       <div class="grid-3">
         <div class="card feature">
-          <div class="mark" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.3" y="1.6" width="9.4" height="14.8" rx="4.7"/><path d="M4.4 7.1h9.2M9 1.7v5.4"/></svg>
-          </div>
           <h3>One job</h3>
           <ul>
             <li>Mouse buttons 4 and 5</li>
@@ -602,20 +582,14 @@ img.logo-dark,.ti-to-light{display:none}
           </ul>
         </div>
         <div class="card feature">
-          <div class="mark" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.8 15.5 5.4v7.2L9 16.2 2.5 12.6V5.4Z"/><path d="M2.6 5.4 9 9l6.4-3.6M9 9v7.2"/></svg>
-          </div>
           <h3>Small by design</h3>
           <ul>
-            <li>One native app, 376&nbsp;KB</li>
+            <li>One native app, under 400&nbsp;KB</li>
             <li>Unzip and run, nothing to install</li>
-            <li>Zero CPU when idle</li>
+            <li>No polling while idle</li>
           </ul>
         </div>
         <div class="card feature">
-          <div class="mark" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.6 3 4.1v4.6c0 3.5 2.5 6.4 6 7.7 3.5-1.3 6-4.2 6-7.7V4.1Z"/><path d="m6.6 8.9 1.8 1.8 3.2-3.4"/></svg>
-          </div>
           <h3>Private by design</h3>
           <ul>
             <li>No network connections</li>
@@ -678,72 +652,42 @@ img.logo-dark,.ti-to-light{display:none}
       </div>
       <ul class="uses">
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.9 15 4.2v4.5c0 3.4-2.5 6-6 7.4-3.5-1.4-6-4-6-7.4V4.2Z"/><path d="m6.2 8.9 2 2 3.6-3.9"/></svg>
-          </span>
           <span class="what"><strong>Claude Code</strong><span>: approve a request</span></span>
           <span class="sc">Ctrl+Enter</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.8 7.6A5.9 5.9 0 0 0 3.9 5.9"/><path d="M3.9 2.8v3.1H7"/><path d="M3.2 10.4a5.9 5.9 0 0 0 10.9 1.7"/><path d="M14.1 15.2v-3.1H11"/></svg>
-          </span>
           <span class="what"><strong>Claude Code</strong><span>: cycle permission mode</span></span>
           <span class="sc">Shift+Tab</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2.2C9.6 6.2 11.8 8.4 15.8 9 11.8 9.6 9.6 11.8 9 15.8 8.4 11.8 6.2 9.6 2.2 9 6.2 8.4 8.4 6.2 9 2.2Z"/></svg>
-          </span>
           <span class="what"><strong>AI tools</strong></span>
           <span class="sc free">your pick</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1.9" y="4" width="14.2" height="10" rx="2"/><path d="m2.6 5.3 6.4 4.3 6.4-4.3"/></svg>
-          </span>
           <span class="what"><strong>Gmail and Outlook</strong><span>: send</span></span>
           <span class="sc">Ctrl+Enter</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.4" width="14" height="11.2" rx="2"/><path d="M7.6 6.7v4.6l3.9-2.3Z"/></svg>
-          </span>
           <span class="what"><strong>JupyterLab</strong><span>: run the selected cell</span></span>
           <span class="sc">Ctrl+Enter</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.4 9.6 3.8 3.8 7.4-8.2"/></svg>
-          </span>
           <span class="what"><strong>Copilot in VS Code</strong><span>: accept the suggestion</span></span>
           <span class="sc">Tab</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.3" width="14" height="11.4" rx="2"/><path d="M2 7.1h14M6.5 3.3v3.8"/><path d="m7.6 9.9 2.8 2.8M10.4 9.9l-2.8 2.8"/></svg>
-          </span>
           <span class="what"><strong>Close a tab</strong></span>
           <span class="sc">Ctrl+W</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.3" width="14" height="11.4" rx="2"/><path d="M2 7.1h14M6.5 3.3v3.8"/><path d="M7.2 9.9h4a1.7 1.7 0 0 1 0 3.4H8.6"/><path d="M8.7 8.4 7.2 9.9l1.5 1.5"/></svg>
-          </span>
           <span class="what"><strong>Reopen the closed tab</strong></span>
           <span class="sc">Ctrl+Shift+T</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.4" y="1.9" width="5.2" height="8.4" rx="2.6"/><path d="M3.9 8.7a5.1 5.1 0 0 0 10.2 0M9 13.8v2.2"/></svg>
-          </span>
           <span class="what"><strong>Teams</strong><span>: mute or unmute</span></span>
           <span class="sc">Ctrl+Shift+M</span>
         </li>
         <li>
-          <span class="ico" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.3 5.9h2.8l1.2-2h5.4l1.2 2h2.8a1.2 1.2 0 0 1 1.2 1.2v6.1a1.2 1.2 0 0 1-1.2 1.2H2.3a1.2 1.2 0 0 1-1.2-1.2V7.1a1.2 1.2 0 0 1 1.2-1.2Z"/><circle cx="9" cy="10.2" r="2.7"/></svg>
-          </span>
           <span class="what"><strong>Screenshot a region</strong></span>
           <span class="sc">Win+Shift+S</span>
         </li>
@@ -760,8 +704,8 @@ img.logo-dark,.ti-to-light{display:none}
       <meta itemprop="applicationCategory" content="UtilitiesApplication">
       <dl class="specs">
         <div><dt>Platform</dt><dd itemprop="operatingSystem">Windows, x64</dd></div>
-        <div><dt>Tested on</dt><dd>Windows&nbsp;11</dd></div>
-        <div><dt>Size</dt><dd>376&nbsp;KB, one file</dd></div>
+        <div><dt>Target</dt><dd>Windows&nbsp;11</dd></div>
+        <div><dt>EXE size</dt><dd>Under 400&nbsp;KB; distribute with LICENSE</dd></div>
         <div><dt>Language</dt><dd>C++ / Win32</dd></div>
         <div><dt>Dependencies</dt><dd>None to install</dd></div>
         <div><dt>Install</dt><dd>Portable</dd></div>
@@ -791,7 +735,7 @@ img.logo-dark,.ti-to-light{display:none}
         </details>
         <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
           <summary itemprop="name">What can a button send?</summary>
-          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">One key, optionally combined with Ctrl, Alt, Shift or Win. Supported keys are letters, digits, F1&ndash;F24, Enter, Tab, Esc, Space, Backspace, Delete, Insert, Home, End, Page Up, Page Down and the arrow keys. No macros, key sequences, media or volume keys, and no per-app profiles.</span></p>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">One key, optionally combined with Ctrl, Alt, Shift or Win. Plain keys stay down for the physical duration of the mouse press. Duplicate presses are ignored; two buttons mapped to the same plain key share the hold until both are released. Modifier shortcuts remain one-shot combinations sent on press. Clicklet generates no repeat events. Windows can refuse injection or release, and physical keyboard state can interfere with mapped holds. Supported keys are letters, digits, F1&ndash;F24, Enter, Tab, Esc, Space, Backspace, Delete, Insert, Home, End, Page Up, Page Down and the arrow keys. No macros, key sequences, media or volume keys, and no per-app profiles.</span></p>
         </details>
         <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
           <summary itemprop="name">Will it work with my mouse?</summary>
@@ -799,7 +743,7 @@ img.logo-dark,.ti-to-light{display:none}
         </details>
         <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
           <summary itemprop="name">Does it work on Windows 10?</summary>
-          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Clicklet 1.0.0 was built and tested on Windows&nbsp;11, x64. It hasn&rsquo;t been tested on Windows&nbsp;10, so we can&rsquo;t tell you either way.</span></p>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">This fork targets Windows&nbsp;11, x64. See the fork documentation for validation details; Windows&nbsp;10 is not a supported target.</span></p>
         </details>
         <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
           <summary itemprop="name">Does it work in apps running as administrator?</summary>
@@ -823,7 +767,7 @@ img.logo-dark,.ti-to-light{display:none}
         </details>
         <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
           <summary itemprop="name">Can I turn it off for a moment?</summary>
-          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Uncheck <strong>Enabled</strong> in the tray menu. The tray icon has a separate disabled version, so you can see the state at a glance. Clicklet starts enabled every time it runs.</span></p>
+          <p itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer"><span itemprop="text">Uncheck <strong>Enabled</strong> in the tray menu. The generic tray icon reverses its dark and light fill when disabled. Clicklet starts enabled every time it runs.</span></p>
         </details>
         <details itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
           <summary itemprop="name">Does it start with Windows?</summary>
@@ -849,11 +793,11 @@ img.logo-dark,.ti-to-light{display:none}
     <div class="wrap close-band">
       <h2 id="get-h">Get Clicklet.</h2>
       <div class="cta">
-        <a class="btn btn-primary" href="https://github.com/tabakman/clicklet/releases/download/v1.0.0/Clicklet-1.0.0-win-x64.zip" target="_blank" rel="noopener noreferrer">
-          <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6v8.2M4.6 6.6 8 10l3.4-3.4M2 11.6v1.3a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1.3"/></svg>
-          Download Clicklet 1.0.0
+        <a class="btn btn-primary" href="https://github.com/Hod-P/clicklet/releases" target="_blank" rel="noopener noreferrer">
+
+          Fork releases
         </a>
-        <a class="btn btn-secondary" href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer"><svg class="gh" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>View the source</a>
+        <a class="btn btn-secondary" href="https://github.com/Hod-P/clicklet" target="_blank" rel="noopener noreferrer">View the source</a>
       </div>
       <p class="cta-meta">Windows, x64 &middot;&nbsp;Free and open source</p>
     </div>
@@ -864,14 +808,20 @@ img.logo-dark,.ti-to-light{display:none}
 <footer class="site-foot">
   <div class="wrap">
     <div class="foot-top">
-      <img class="logo-light" src="assets/logo.svg" alt="Clicklet" width="103" height="24">
-      <img class="logo-dark" src="assets/logo-dark.svg" alt="Clicklet" width="103" height="24">
+      <img src="assets/placeholder.svg" alt="" width="24" height="24"> <span>Clicklet (unofficial fork)</span>
       <nav class="foot-links" aria-label="Footer">
-        <a href="https://github.com/tabakman/clicklet" target="_blank" rel="noopener noreferrer" aria-label="Repository on GitHub">Repository</a>
-        <a href="https://github.com/tabakman/clicklet/releases/latest" target="_blank" rel="noopener noreferrer" aria-label="Releases on GitHub">Releases</a>
-        <a href="https://github.com/tabakman/clicklet#readme" target="_blank" rel="noopener noreferrer" aria-label="Documentation on GitHub">Documentation</a>
+        <a href="https://github.com/Hod-P/clicklet" target="_blank" rel="noopener noreferrer" aria-label="Repository on GitHub">Repository</a>
+        <a href="https://github.com/Hod-P/clicklet/releases" target="_blank" rel="noopener noreferrer" aria-label="Releases on GitHub">Releases</a>
+        <a href="https://github.com/Hod-P/clicklet#readme" target="_blank" rel="noopener noreferrer" aria-label="Documentation on GitHub">Documentation</a>
       </nav>
     </div>
+    <p>Package the executable with the original MIT <a href="https://github.com/Hod-P/clicklet/blob/HEAD/LICENSE">LICENSE</a>
+    and the build's <code>README.txt</code> identifying this unofficial fork;
+    see <a href="https://github.com/Hod-P/clicklet/blob/HEAD/docs/RELEASING.md">release packaging</a>.
+    Original logo and icons: &copy; Tal Tabakman, all rights reserved; removed from current files.
+    New geometric placeholders are MIT-licensed; see <a href="https://github.com/Hod-P/clicklet/blob/HEAD/res/LICENSE.md">artwork provenance</a>.
+    The bundled <a href="assets/fonts/Inter-LICENSE.txt">Inter font retains its SIL Open Font License</a>.
+    No trademark clearance for the retained Clicklet name is asserted.</p>
   </div>
 </footer>
 

@@ -71,4 +71,10 @@
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <!-- Include the original MIT notice and fork identification with every production build. -->
+  <Target Name="CopyClickletLicense" AfterTargets="Build" Condition="'$(MSBuildProjectName)' == 'Clicklet'">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)LICENSE" DestinationFolder="$(OutDir)" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)RELEASE_README.txt" DestinationFiles="$(OutDir)README.txt" />
+  </Target>
 </Project>

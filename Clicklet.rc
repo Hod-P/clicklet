@@ -4,12 +4,11 @@
 #include "Resource.h"
 
 // No named ICON resources: Explorer would show one of those instead of IDI_APPICON (Resource.h).
-// appicon.ico and tray-enabled.ico are identical on purpose: keep them as separate resources.
-IDI_APPICON        ICON  "res/appicon.ico"
-IDI_TRAY_ENABLED   ICON  "res/tray-enabled.ico"
-IDI_TRAY_DISABLED  ICON  "res/tray-disabled.ico"
+// The executable and enabled tray state share one icon group.
+IDI_APPICON        ICON  "res/placeholder.ico"
+IDI_TRAY_DISABLED  ICON  "res/placeholder-disabled.ico"
 
-IDB_ABOUT_LOGO BITMAP "res/logo_about.bmp"
+IDB_ABOUT_LOGO BITMAP "res/about-placeholder.bmp"
 
 // Strings stay ASCII: write (c), not a copyright sign, which rc.exe code-page handling can mangle.
 VS_VERSION_INFO VERSIONINFO
@@ -26,13 +25,13 @@ BEGIN
         // Must agree with Translation below: 0409 = 0x409, 04B0 = 1200.
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName",      "Tal Tabakman"
-            VALUE "FileDescription",  "Clicklet"
+            VALUE "CompanyName",      "Clicklet unofficial fork contributors"
+            VALUE "FileDescription",  "Clicklet (unofficial fork)"
             VALUE "FileVersion",      CLICKLET_VERSION_STRING
             VALUE "InternalName",     "Clicklet"
             VALUE "LegalCopyright",   "Copyright (c) 2026 Tal Tabakman. MIT Licence."
             VALUE "OriginalFilename", "Clicklet.exe"
-            VALUE "ProductName",      "Clicklet"
+            VALUE "ProductName",      "Clicklet (unofficial fork)"
             VALUE "ProductVersion",   CLICKLET_VERSION_STRING
         END
     END
@@ -45,7 +44,7 @@ END
 // Moving the licence line or the link means moving CLICKLET_LINK_BAND_*_DLU in Clicklet.cpp.
 IDD_ABOUT DIALOGEX 0, 0, 188, 100
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "About Clicklet"
+CAPTION "About Clicklet (unofficial fork)"
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
     CONTROL         "", IDC_ABOUT_LOGO, "Static", SS_BITMAP, 19, 10, 149, 33
