@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Reuse the production toolset, compiler flags and linker optimizations. -->
+  <Import Project="..\Clicklet.vcxproj" />
+  <PropertyGroup>
+    <TargetName>phase0</TargetName>
+    <OutDir>$(MSBuildThisFileDirectory)..\build\phase0\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\build\obj\phase0\$(Platform)\$(Configuration)\</IntDir>
+    <!-- Cpp.targets computed these during the import, before our path overrides. -->
+    <TargetFileName>$(TargetName)$(TargetExt)</TargetFileName>
+    <TargetPath>$(OutDir)$(TargetFileName)</TargetPath>
+    <TargetDir>$(OutDir)</TargetDir>
+    <TLogLocation>$(IntDir)$(MSBuildProjectName).tlog\</TLogLocation>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Remove="@(ClCompile)" />
+    <ClInclude Remove="@(ClInclude)" />
+    <ResourceCompile Remove="@(ResourceCompile)" />
+    <ClCompile Include="phase0.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <Target Name="CopyPhase0Fixtures" AfterTargets="Build">
+    <ItemGroup>
+      <Phase0Fixture Include="$(MSBuildThisFileDirectory)fixtures\*.ini" />
+    </ItemGroup>
+    <Copy SourceFiles="@(Phase0Fixture)" DestinationFolder="$(OutDir)fixtures" />
+  </Target>
+</Project>

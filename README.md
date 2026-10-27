@@ -52,6 +52,11 @@ Supported keys: letters, digits, F1–F24, Enter, Tab, Esc, Space, Backspace, De
 
 Modifiers are optional, so a bare key such as `f5` is valid.
 
+Bare keys go down when the mouse button is pressed and up when it is released.
+Duplicate presses are ignored until release. If both buttons map to the same
+bare key, it stays down until both are released. Modifier shortcuts remain
+one-shot combinations sent on press. Clicklet does not generate repeat events.
+
 One shortcut per button. No sequences or macros.
 
 ## Small by design
@@ -100,6 +105,9 @@ Clicklet is intentionally narrow:
 - Never remaps left, right, or middle click
 - Doesn't work in apps running as administrator
 - Mouse-vendor software can intercept the side buttons
+- Release on disable/exit is best effort: Windows can refuse injected input.
+  Physical keys/modifiers and a one-shot shortcut using the same target key can
+  interfere with a mapped hold; Clicklet does not track the physical keyboard.
 - Unsigned, so Windows SmartScreen may warn on first run
 
 ## Specs

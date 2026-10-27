@@ -43,6 +43,18 @@ static HICON g_iconDisabled;
 static BOOL  g_enabled      = TRUE;
 static WCHAR g_iniPath[MAX_PATH];
 
+// Fixed storage, shared when the two plain mappings resolve to the same key.
+// held means an accepted synthetic DOWN still needs a successful UP.
+static struct KeyState
+{
+    INPUT *down;
+    INPUT *up;
+    UINT   owners;
+    BOOL   held;
+    BOOL   sending;
+}
+g_keys[2];
+
 // g_mappings[0] is XBUTTON1 and g_mappings[1] is XBUTTON2; MouseHookProc indexes them that way.
 static struct Mapping
 {
@@ -52,6 +64,13 @@ static struct Mapping
     UINT         keystrokeCount;
     WCHAR        keystrokeText[KEYSTROKE_TEXT_MAX];
     BOOL         downSwallowed;   // per button: one shared flag would let an up through orphaned
+    BOOL         downSeen;        // includes failed/passed presses: no retry until physical UP
+    UINT         pressSerial;     // distinguish a new press delivered during SendInput
+    BOOL         keyOwned;
+    KeyState    *key;             // NULL for legacy modifier shortcuts
+    UINT         pendingUps;
+    BOOL         recovering;     // guards shortcut dispatch and recovery against reentrancy
+    UINT         recoveryMask[KEYSTROKE_INPUT_MAX + 1]; // precomputed for partial shortcut sends
 }
 g_mappings[] =
 {
@@ -88,7 +107,39 @@ static void TrayMessage(DWORD message)
     Shell_NotifyIconW(message, &data);
 }
 
-// Runs for every mouse event system-wide: no parsing or allocation, send the prebuilt input only.
+// One immediate retry on refusal; retain held state if both attempts fail.
+static BOOL ReleaseKey(KeyState *key)
+{
+    if (key->held && key->owners == 0 && !key->sending)
+    {
+        key->sending = TRUE;
+        if (SendInput(1, key->up, sizeof(INPUT)) == 1 ||
+            SendInput(1, key->up, sizeof(INPUT)) == 1)
+            key->held = FALSE;
+        key->sending = FALSE;
+    }
+    return !key->held;
+}
+
+// Error/lifecycle path only. Bits identify prebuilt UPs in release order.
+// For a partial shortcut, recovery assumes the reported count is a prefix.
+static void ReleaseShortcut(struct Mapping *mapping)
+{
+    if (mapping->recovering)
+        return;
+    mapping->recovering = TRUE;
+    for (UINT i = 0; i < mapping->keystrokeCount; ++i)
+    {
+        const UINT bit = 1u << i;
+        if ((mapping->pendingUps & bit) != 0 &&
+            (SendInput(1, &mapping->keystroke[i], sizeof(INPUT)) == 1 ||
+             SendInput(1, &mapping->keystroke[i], sizeof(INPUT)) == 1))
+            mapping->pendingUps &= ~bit;
+    }
+    mapping->recovering = FALSE;
+}
+
+// Runs for every mouse event system-wide: no parsing or allocation.
 static LRESULT CALLBACK MouseHookProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code == HC_ACTION && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP))
@@ -105,18 +156,97 @@ static LRESULT CALLBACK MouseHookProc(int code, WPARAM wParam, LPARAM lParam)
         {
             if (wParam == WM_XBUTTONDOWN)
             {
-                // Not redundant: a hook that failed to uninstall must still pass input through.
-                if (g_enabled)
+                if (mapping->downSeen && (mapping->key != NULL || !mapping->downSwallowed || !g_enabled))
+                    return mapping->downSwallowed ? 1 : CallNextHookEx(NULL, code, wParam, lParam);
+
+                const BOOL alreadySwallowed = mapping->downSwallowed;
+                if (!mapping->downSeen)
+                    ++mapping->pressSerial;
+                const UINT press = mapping->pressSerial;
+                mapping->downSeen = TRUE;
+                // A failed uninstall can still deliver callbacks while disabled.
+                if (g_enabled && mapping->key != NULL)
                 {
-                    mapping->downSwallowed = TRUE;
-                    SendInput(mapping->keystrokeCount, mapping->keystroke, sizeof(INPUT));
-                    return 1;
+                    KeyState *key = mapping->key;
+                    if (!key->sending && (key->owners != 0 || ReleaseKey(key)) &&
+                        g_enabled && mapping->downSeen && mapping->pressSerial == press)
+                    {
+                        // Reserve the button before SendInput to deduplicate reentrant DOWN.
+                        mapping->downSwallowed = TRUE;
+                        key->sending = TRUE;
+                        const BOOL accepted = key->owners != 0 ||
+                            SendInput(1, key->down, sizeof(INPUT)) == 1;
+                        key->sending = FALSE;
+                        if (accepted)
+                        {
+                            key->held = TRUE;
+                            // An UP/disable delivered reentrantly must not acquire a stale hold.
+                            if (!mapping->downSeen || !g_enabled || mapping->pressSerial != press)
+                            {
+                                ReleaseKey(key);
+                                return 1;
+                            }
+                            ++key->owners;
+                            mapping->keyOwned = TRUE;
+                            return 1;
+                        }
+                        // A nested UP already consumed the reservation. Do not forward
+                        // its DOWN or overwrite flags belonging to a replacement press.
+                        if (!mapping->downSeen || mapping->pressSerial != press)
+                            return 1;
+                        mapping->downSwallowed = alreadySwallowed;
+                    }
+                }
+                else if (g_enabled)
+                {
+                    if (mapping->pendingUps != 0)
+                        ReleaseShortcut(mapping);
+                    if (g_enabled && mapping->downSeen && mapping->pressSerial == press &&
+                        !mapping->recovering && mapping->pendingUps == 0)
+                    {
+                        // Reserve pairing before dispatch, including zero/partial results.
+                        // Reuse the recovery guard to block nested shortcut dispatch.
+                        mapping->downSwallowed = TRUE;
+                        mapping->recovering = TRUE;
+                        const UINT sent = SendInput(mapping->keystrokeCount, mapping->keystroke, sizeof(INPUT));
+                        mapping->recovering = FALSE;
+                        if (sent != 0)
+                        {
+                            if (sent < mapping->keystrokeCount)
+                            {
+                                mapping->pendingUps = mapping->recoveryMask[sent];
+                                ReleaseShortcut(mapping);
+                            }
+                            return 1;
+                        }
+                        if (!mapping->downSeen || mapping->pressSerial != press)
+                            return 1;
+                        mapping->downSwallowed = alreadySwallowed;
+                    }
+                    // An earlier successful shortcut DOWN already consumed this press.
+                    if (alreadySwallowed)
+                        return 1;
                 }
             }
-            else if (mapping->downSwallowed)
+            else
             {
+                const BOOL swallowed = mapping->downSwallowed;
+                mapping->downSeen = FALSE;
                 mapping->downSwallowed = FALSE;
-                return 1;
+                if (mapping->key != NULL)
+                {
+                    if (mapping->keyOwned)
+                    {
+                        mapping->keyOwned = FALSE;
+                        --mapping->key->owners;
+                    }
+                    if (mapping->key->owners == 0 && mapping->key->held)
+                        ReleaseKey(mapping->key);
+                }
+                else if (mapping->pendingUps != 0)
+                    ReleaseShortcut(mapping);
+                if (swallowed)
+                    return 1;
             }
         }
     }
@@ -134,17 +264,45 @@ static BOOL InstallHook(void)
 
 static void UninstallHook(void)
 {
+    g_enabled = FALSE;
+    // Detach every owner before a release can deliver a reentrant mouse UP.
+    for (Mapping &mapping : g_mappings)
+        mapping.keyOwned = FALSE;
+    for (KeyState &key : g_keys)
+        key.owners = 0;
+    for (KeyState &key : g_keys)
+        ReleaseKey(&key);
+    for (Mapping &mapping : g_mappings)
+    {
+        if (mapping.pendingUps != 0)
+            ReleaseShortcut(&mapping);
+    }
+
     // Keep the handle if unhooking failed, or InstallHook would stack a second hook on it.
     if (g_hook != NULL && UnhookWindowsHookEx(g_hook))
         g_hook = NULL;
 
-    // Clear every flag: unobserved, a stale TRUE swallows a real up and leaves the button down.
-    for (int i = 0; i < (int)ARRAYSIZE(g_mappings); ++i)
-        g_mappings[i].downSwallowed = FALSE;
+    // Preserve suppression pairing if unhook failed and UP can still be observed.
+    // Once removed, unobserved presses make remembered button flags unreliable.
+    if (g_hook == NULL)
+        for (Mapping &mapping : g_mappings)
+        {
+            mapping.downSwallowed = FALSE;
+            mapping.downSeen = FALSE;
+        }
 }
 
 static void SetEnabled(BOOL enabled)
 {
+    if (enabled)
+    {
+        for (KeyState &key : g_keys)
+            if (key.owners == 0)
+                ReleaseKey(&key);
+        for (Mapping &mapping : g_mappings)
+            if (mapping.pendingUps != 0)
+                ReleaseShortcut(&mapping);
+    }
     if (enabled && !InstallHook())
         enabled = FALSE;
     if (!enabled)
@@ -656,6 +814,53 @@ static BOOL ParseKeystroke(struct Mapping *mapping, const WCHAR *text)
     return TRUE;
 }
 
+// Called once, after configuration loading. No key lookup or INPUT building in the hook.
+static void PrepareMappings(void)
+{
+    ZeroMemory(g_keys, sizeof(g_keys));
+    for (int i = 0; i < (int)ARRAYSIZE(g_mappings); ++i)
+    {
+        Mapping *mapping = &g_mappings[i];
+        mapping->key = NULL;
+        mapping->downSeen = FALSE;
+        mapping->pressSerial = 0;
+        mapping->downSwallowed = FALSE;
+        mapping->keyOwned = FALSE;
+        mapping->pendingUps = 0;
+        mapping->recovering = FALSE;
+        ZeroMemory(mapping->recoveryMask, sizeof(mapping->recoveryMask));
+        if (mapping->keystrokeCount == 2)
+        {
+            KeyState *key = &g_keys[i];
+            key->down = &mapping->keystroke[0];
+            key->up = &mapping->keystroke[1];
+            mapping->key = key;
+            if (i == 1 && g_mappings[0].key != NULL &&
+                g_mappings[0].keystroke[0].ki.wVk == key->down->ki.wVk &&
+                g_mappings[0].keystroke[0].ki.dwFlags == key->down->ki.dwFlags)
+                mapping->key = g_mappings[0].key;
+        }
+        else
+        {
+            UINT pending = 0;
+            for (UINT j = 0; j < mapping->keystrokeCount; ++j)
+            {
+                if ((mapping->keystroke[j].ki.dwFlags & KEYEVENTF_KEYUP) != 0)
+                    pending &= ~(1u << j);
+                else
+                    for (UINT k = j + 1; k < mapping->keystrokeCount; ++k)
+                        if (mapping->keystroke[k].ki.wVk == mapping->keystroke[j].ki.wVk &&
+                            (mapping->keystroke[k].ki.dwFlags & KEYEVENTF_KEYUP) != 0)
+                        {
+                            pending |= 1u << k;
+                            break;
+                        }
+                mapping->recoveryMask[j + 1] = pending;
+            }
+        }
+    }
+}
+
 // Must be absolute: given a bare file name the profile API searches the Windows directory.
 static BOOL BuildIniPath(void)
 {
@@ -821,6 +1026,7 @@ int APIENTRY wWinMain(HINSTANCE instance, HINSTANCE previousInstance,
         ReportBadConfiguration(problem);
         return 2;
     }
+    PrepareMappings();
 
     HANDLE instanceLock = CreateMutexW(NULL, TRUE, L"Local\\Clicklet.SingleInstance");
     if (instanceLock == NULL)

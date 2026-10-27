@@ -35,3 +35,6 @@ ipch/
 *.opensdf
 *.VC.db
 *.VC.opendb
+
+PHASE*_REPORT.md
+PHASE*_BASELINE.md
