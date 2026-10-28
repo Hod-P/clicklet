@@ -5,10 +5,10 @@
 
 // No named ICON resources: Explorer would show one of those instead of IDI_APPICON (Resource.h).
 // The executable and enabled tray state share one icon group.
-IDI_APPICON        ICON  "res/placeholder.ico"
-IDI_TRAY_DISABLED  ICON  "res/placeholder-disabled.ico"
+IDI_APPICON        ICON  "res/clicklet-enabled.ico"
+IDI_TRAY_DISABLED  ICON  "res/clicklet-disabled.ico"
 
-IDB_ABOUT_LOGO BITMAP "res/about-placeholder.bmp"
+IDB_ABOUT_LOGO BITMAP "res/about-mouse.bmp"
 
 // Strings stay ASCII: write (c), not a copyright sign, which rc.exe code-page handling can mangle.
 VS_VERSION_INFO VERSIONINFO

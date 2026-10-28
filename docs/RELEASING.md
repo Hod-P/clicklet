@@ -4,7 +4,7 @@ This document concerns [Hod-P/clicklet](https://github.com/Hod-P/clicklet).
 Tal Tabakman developed the [upstream Clicklet project](https://github.com/tabakman/clicklet).
 This modified fork is not affiliated with or endorsed by the original developer.
 Its changes include held-key remapping, shared key ownership, input recovery,
-regression tests and replacement geometric artwork. The original MIT notice
+regression tests and custom hand-drawn mouse artwork. The original MIT notice
 remains intact. No ownership of the entire repository or new copyright in
 AI-assisted contributions is claimed.
 
@@ -19,7 +19,7 @@ The production build outputs the following to `build/x64/Release/`:
 
 | File | Purpose |
 |---|---|
-| `Clicklet.exe` | Rebuilt x64 application, including the geometric placeholder icons and About bitmap. |
+| `Clicklet.exe` | Rebuilt x64 application, including the custom Enabled/Disabled icons and About bitmap. |
 | `LICENSE` | Unmodified MIT license, including Copyright (c) 2026 Tal Tabakman. |
 | `README.txt` | Copy of [RELEASE_README.txt](../RELEASE_README.txt), identifying the fork, origin, changes and usage limits. |
 
@@ -28,8 +28,15 @@ folder. The output directory may also contain a personal `Clicklet.ini`;
 leave it untouched and exclude it from the package. Verify that the two text
 files match their source files byte for byte.
 Inspect the rebuilt EXE's icon groups and About bitmap against the current
-`res/placeholder*.ico` and `res/about-placeholder.bmp`. Do not package an old
-EXE or an entire build folder: ignored earlier binaries may contain the
+`res/clicklet-enabled.ico`, `res/clicklet-disabled.ico` and `res/about-mouse.bmp`.
+The lowest-numbered icon group (1) must be Enabled, making it Explorer's default;
+Disabled must remain the distinct group 3. Both ICOs contain 16, 20, 24, 32, 40,
+48, 64, 128 and 256 pixel frames. The 16px frames embed the corresponding
+`res/source/tray-*-16.png` verbatim. Check transparency and green/gray upper-right
+status squares, and inspect the Explorer icon, tray at relevant DPI settings,
+About dialog and website in light/dark themes before release. Running Clicklet
+for visual checks still requires separate approval during agent-assisted work.
+Do not package an old EXE or an entire build folder: ignored earlier binaries may contain the
 original artwork. This process needs no installer or additional runtime.
 Inspecting or building a package does not authorize uploading it or publishing
 a release.
@@ -39,8 +46,11 @@ files. Segoe UI is requested from Windows; no Microsoft SDK, compiler or system
 DLL is copied into the package. The CRT is statically linked by the existing
 `/MT` build; distribution remains subject to the builder's Visual Studio license.
 The Inter OFL notice is required when bundling the font, not for this three-file
-binary package. The original MIT notice also covers the MIT-licensed
-placeholder assets; their provenance is in [res/LICENSE.md](../res/LICENSE.md).
+binary package. The fork owner supplies the custom artwork and its derivatives
+under MIT; their provenance and regeneration instructions are in
+[res/LICENSE.md](../res/LICENSE.md). Keep all three original PNGs in
+`res/source/` in source distributions. Regeneration is a development step;
+neither PowerShell nor an image library is required to build or run Clicklet.
 
 ## Source and website distributions
 
