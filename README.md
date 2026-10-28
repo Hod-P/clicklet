@@ -135,8 +135,8 @@ Copyright (c) 2026 Tal Tabakman notice. Preserve that notice when redistributing
 
 The original logo and icons are © Tal Tabakman, all rights reserved, and are
 not MIT-licensed. They have been removed from the current tree but may remain
-in Git history. Current geometric assets are independently code-generated
-**placeholders**, provided under MIT; they are not final artwork. See
+in Git history. The current mouse artwork was hand-drawn and supplied by the
+fork owner under MIT, including its derived icons and About bitmap. See
 [artwork provenance and regeneration](res/LICENSE.md). The website's Inter font
 retains its separate [SIL Open Font License](docs/assets/fonts/Inter-LICENSE.txt).
 The retained Clicklet name carries no claim of permission or trademark clearance.
